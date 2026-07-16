@@ -33,8 +33,12 @@ const NAME_SETS: Record<MarketFamily, string[][]> = {
 
 function extractLine(parameters?: string): number | undefined {
   if (!parameters) return undefined;
-  const match = parameters.match(/-?\d+(\.\d+)?/);
-  return match ? Number(match[0]) : undefined;
+  // Prefer the value keyed as "line=…"; fall back to the first number only
+  // when the parameter string is a bare value.
+  const keyed = parameters.match(/(?:^|[&;,\s])line=(-?\d+(?:\.\d+)?)/i);
+  if (keyed) return Number(keyed[1]);
+  const bare = parameters.match(/^-?\d+(\.\d+)?$/);
+  return bare ? Number(bare[0]) : undefined;
 }
 
 /**
@@ -95,6 +99,9 @@ export function classifyMarket(record: OddsRecord): MarketView | null {
   const total = marketProbs.reduce((s, p) => s + p, 0);
   if (total < 0.9 || total > 1.1) return null; // reject inconsistent data
   marketProbs = marketProbs.map((p) => p / total);
+  // Degenerate quotes (0% or 100% outcomes) produce infinite/NaN odds
+  // downstream — refuse to price them at all.
+  if (marketProbs.some((p) => !(p >= 0.005 && p <= 0.995))) return null;
 
   return {
     family,
@@ -165,8 +172,24 @@ export function modelProbs(
   const probs = outcomeProbabilities(score.p1, score.p2, remLambdaHome, remLambdaAway);
 
   switch (market.family) {
-    case "WIN_DRAW_WIN":
-      return [probs.homeWin, probs.draw, probs.awayWin];
+    case "WIN_DRAW_WIN": {
+      // Align to the market's actual label order — fallback-classified
+      // 1X2 markets may not arrive as [home, draw, away].
+      const byLabel: Record<string, number> = {
+        "1": probs.homeWin,
+        home: probs.homeWin,
+        part1: probs.homeWin,
+        x: probs.draw,
+        draw: probs.draw,
+        "2": probs.awayWin,
+        away: probs.awayWin,
+        part2: probs.awayWin,
+      };
+      const mapped = market.outcomes.map((name) => byLabel[name]);
+      return mapped.every((p) => p !== undefined)
+        ? (mapped as number[])
+        : [probs.homeWin, probs.draw, probs.awayWin];
+    }
     case "TOTAL_GOALS": {
       if (market.line === undefined) return null;
       const over = probs.over(market.line);

@@ -31,8 +31,10 @@ export interface EngineOutput {
  * The decision engine: strategies propose, intelligence scales, risk
  * disposes. Pure given its inputs — same context and state always produce
  * the same decisions (and the same hashes).
+ * (Third parameter retained for call-site compatibility; quote freshness
+ * is now judged per intent inside the risk gate.)
  */
-export function runEngine(ctx: StrategyContext, deps: EngineDeps, freshestFeedTs: number): EngineOutput {
+export function runEngine(ctx: StrategyContext, deps: EngineDeps, _freshestFeedTs?: number): EngineOutput {
   const decisions: DecisionRecord[] = [];
   const vetoes: EngineOutput["vetoes"] = [];
   const weights = deps.allocation.weights();
@@ -48,13 +50,7 @@ export function runEngine(ctx: StrategyContext, deps: EngineDeps, freshestFeedTs
       }
 
       const suspended = deps.suspension.isSuspended(strategyId);
-      const gateResult: GateResult = gate(
-        intent,
-        deps.riskState,
-        deps.limits,
-        ctx.nowTs,
-        freshestFeedTs,
-      );
+      const gateResult: GateResult = gate(intent, deps.riskState, deps.limits, ctx.nowTs);
       if (!gateResult.allowed && !suspended) {
         vetoes.push({ intent, reason: gateResult.vetoReason ?? "risk gate" });
         continue;
@@ -64,7 +60,9 @@ export function runEngine(ctx: StrategyContext, deps: EngineDeps, freshestFeedTs
       const sizing = sizePosition({
         modelProb: intent.modelProb,
         priceDecimal,
-        bankrollUsdc: deps.riskState.equityUsdc,
+        // Kelly sizes off account value at cost (bankroll + realized P&L),
+        // not cash-on-hand — escrowed stakes are still our capital.
+        bankrollUsdc: deps.riskState.realizedUsdc,
         calibrationFactor: calibrationReport.factor,
         allocationWeight: weights.get(strategyId) ?? 0,
         maxStakeUsdc: gateResult.stakeCapUsdc,
@@ -73,6 +71,10 @@ export function runEngine(ctx: StrategyContext, deps: EngineDeps, freshestFeedTs
       // Suspended strategies trade at zero stake (shadow mode) so the SPRT
       // keeps collecting evidence for an autonomous re-enable.
       const stakeUsdc = suspended ? 0 : sizing.stakeUsdc;
+      if (!Number.isFinite(stakeUsdc)) {
+        vetoes.push({ intent, reason: "non-finite stake — degenerate inputs" });
+        continue;
+      }
       if (!suspended && stakeUsdc < deps.limits.minStakeUsdc) {
         vetoes.push({ intent, reason: "stake below minimum after sizing" });
         continue;
@@ -98,7 +100,7 @@ export function runEngine(ctx: StrategyContext, deps: EngineDeps, freshestFeedTs
           kellyFraction: round4(sizing.kellyFraction),
           calibrationFactor: round4(calibrationReport.factor),
           allocationWeight: round4(weights.get(strategyId) ?? 0),
-          bankrollUsdc: round2(deps.riskState.equityUsdc),
+          bankrollUsdc: round2(deps.riskState.realizedUsdc),
         },
         inputs: intent.inputs,
       };

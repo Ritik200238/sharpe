@@ -86,7 +86,7 @@ async function tick() {
       const winRate = a.settled ? (100*a.wins/a.settled).toFixed(0)+"%" : "—";
       $("stats").innerHTML =
         stat("mode", `${status.network} · ${status.feedMode} · ${status.execMode}`) +
-        stat("equity (usdc)", fmt(status.equityUsdc), status.equityUsdc >= status.peakEquityUsdc ? "pos":"") +
+        stat("equity (usdc)", fmt(status.realizedUsdc ?? status.equityUsdc), (status.realizedUsdc ?? 0) >= (status.peakRealizedUsdc ?? 0) ? "pos":"") +
         stat("p&l (usdc)", (a.pnlUsdc>0?"+":"") + fmt(a.pnlUsdc), pnlCls) +
         stat("decisions", fmt(a.decisions,0)) +
         stat("settled · win rate", `${fmt(a.settled,0)} · ${winRate}`) +

@@ -6,6 +6,7 @@
   "scripts": {
     "start": "tsx src/main.ts",
     "replay": "tsx src/main.ts --mode replay",
+    "backtest": "tsx tools/backtest.ts",
     "test": "tsx --test test/*.test.ts",
     "typecheck": "tsc --noEmit"
   },

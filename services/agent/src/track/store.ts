@@ -30,6 +30,14 @@ export class TrackStore {
   readonly settlements = new Map<string, SettlementRecord>();
   readonly reviews: MatchReview[] = [];
 
+  /** Open-position indexes — O(1) hot-path lookups instead of full scans. */
+  private openByHash = new Map<string, DecisionRecord>();
+  private openOutcomeKeys = new Set<string>();
+
+  private static outcomeKey(d: DecisionRecord): string {
+    return `${d.fixtureId}|${d.marketKey}|${d.outcomeIndex}`;
+  }
+
   constructor(network: Network, mode: string) {
     this.dir = path.join(TRACK_DIR, network, mode);
     fs.mkdirSync(this.dir, { recursive: true });
@@ -49,11 +57,20 @@ export class TrackStore {
     for (const review of readNdjson<MatchReview>(this.reviewsFile)) {
       this.reviews.push(review);
     }
+    for (const decision of this.decisions.values()) {
+      if (!this.settlements.has(decision.hash)) this.indexOpen(decision);
+    }
+  }
+
+  private indexOpen(decision: DecisionRecord): void {
+    this.openByHash.set(decision.hash, decision);
+    if (decision.stakeUsdc > 0) this.openOutcomeKeys.add(TrackStore.outcomeKey(decision));
   }
 
   addDecision(decision: DecisionRecord): void {
     if (this.decisions.has(decision.hash)) return; // idempotent
     this.decisions.set(decision.hash, decision);
+    this.indexOpen(decision);
     fs.appendFileSync(this.decisionsFile, `${JSON.stringify(decision)}\n`);
   }
 
@@ -71,6 +88,11 @@ export class TrackStore {
   addSettlement(settlement: SettlementRecord): void {
     if (this.settlements.has(settlement.decisionHash)) return;
     this.settlements.set(settlement.decisionHash, settlement);
+    const decision = this.openByHash.get(settlement.decisionHash);
+    if (decision) {
+      this.openByHash.delete(settlement.decisionHash);
+      this.openOutcomeKeys.delete(TrackStore.outcomeKey(decision));
+    }
     fs.appendFileSync(this.settlementsFile, `${JSON.stringify(settlement)}\n`);
   }
 
@@ -80,11 +102,31 @@ export class TrackStore {
   }
 
   openDecisions(): DecisionRecord[] {
-    return [...this.decisions.values()].filter((d) => !this.settlements.has(d.hash));
+    return [...this.openByHash.values()];
   }
 
   openForFixture(fixtureId: number): DecisionRecord[] {
     return this.openDecisions().filter((d) => d.fixtureId === fixtureId);
+  }
+
+  /** O(1) duplicate-exposure check for the engine's hot path. */
+  hasOpenSameOutcome(fixtureId: number, marketKey: string, outcomeIndex: number): boolean {
+    return this.openOutcomeKeys.has(`${fixtureId}|${marketKey}|${outcomeIndex}`);
+  }
+
+  /** Realized P&L and its running peak, replayed from the settlement ledger. */
+  settledPnl(bankrollUsdc: number): { pnlUsdc: number; peakRealizedUsdc: number } {
+    const ordered = [...this.settlements.values()].sort((a, b) => a.settledAtTs - b.settledAtTs);
+    let running = bankrollUsdc;
+    let peak = bankrollUsdc;
+    for (const settlement of ordered) {
+      running += settlement.pnlUsdc;
+      peak = Math.max(peak, running);
+    }
+    return {
+      pnlUsdc: Math.round((running - bankrollUsdc) * 100) / 100,
+      peakRealizedUsdc: Math.round(peak * 100) / 100,
+    };
   }
 
   aggregates(): TrackAggregates {

@@ -29,8 +29,13 @@ export interface RiskState {
   openByFixture: Map<number, number>; // fixtureId → open stake
   stakedToday: number;
   dayKey: string; // UTC date the counter belongs to
+  /** Cash on hand (bankroll + realized P&L − open stakes in escrow). */
   equityUsdc: number;
-  peakEquityUsdc: number;
+  /** Account value at cost: bankroll + realized P&L. Escrowing a stake does
+   * NOT reduce this — only settled losses do. Drives Kelly sizing and the
+   * drawdown breaker so deploying capital never trips the halt by itself. */
+  realizedUsdc: number;
+  peakRealizedUsdc: number;
 }
 
 export function initialRiskState(bankrollUsdc: number): RiskState {
@@ -38,9 +43,10 @@ export function initialRiskState(bankrollUsdc: number): RiskState {
     openByMarket: new Map(),
     openByFixture: new Map(),
     stakedToday: 0,
-    dayKey: new Date().toISOString().slice(0, 10),
+    dayKey: "", // set from the first gated event's timestamp — deterministic
     equityUsdc: bankrollUsdc,
-    peakEquityUsdc: bankrollUsdc,
+    realizedUsdc: bankrollUsdc,
+    peakRealizedUsdc: bankrollUsdc,
   };
 }
 
@@ -56,7 +62,6 @@ export function gate(
   state: RiskState,
   limits: RiskLimits,
   nowTs: number,
-  freshestFeedTs: number,
 ): GateResult {
   const dayKey = new Date(nowTs).toISOString().slice(0, 10);
   if (dayKey !== state.dayKey) {
@@ -64,15 +69,20 @@ export function gate(
     state.stakedToday = 0;
   }
 
-  if (nowTs - freshestFeedTs > limits.staleDataMs) {
+  // Quote freshness: the intent's own odds timestamp vs the trigger moment.
+  // Both are feed-source timestamps — deterministic under replay. S2 trades
+  // quotes that LAG an event, but a quote older than staleDataMs is not
+  // real liquidity and must not be priced at all.
+  const quoteAge = nowTs - intent.inputs.oddsTs;
+  if (quoteAge > limits.staleDataMs) {
     return {
       allowed: false,
-      vetoReason: `data stale (${Math.round((nowTs - freshestFeedTs) / 1000)}s old)`,
+      vetoReason: `quote stale (${Math.round(quoteAge / 1000)}s old)`,
       stakeCapUsdc: 0,
     };
   }
 
-  const drawdown = 1 - state.equityUsdc / state.peakEquityUsdc;
+  const drawdown = 1 - state.realizedUsdc / state.peakRealizedUsdc;
   if (drawdown >= limits.drawdownHaltFraction) {
     return {
       allowed: false,
@@ -121,7 +131,38 @@ export function registerSettlement(
   );
 
   const payout = won ? decision.stakeUsdc * decision.priceDecimal : 0;
+  const pnl = payout - decision.stakeUsdc;
   state.equityUsdc += payout;
-  state.peakEquityUsdc = Math.max(state.peakEquityUsdc, state.equityUsdc);
-  return payout - decision.stakeUsdc; // pnl
+  state.realizedUsdc += pnl;
+  state.peakRealizedUsdc = Math.max(state.peakRealizedUsdc, state.realizedUsdc);
+  return pnl;
+}
+
+/**
+ * Rebuild the full risk state from the persisted ledger — called on boot so
+ * a restart resumes with exact equity, exposure maps, day counter, and
+ * high-water mark instead of a fresh bankroll.
+ */
+export function rebuildRiskState(
+  bankrollUsdc: number,
+  openDecisions: DecisionRecord[],
+  settledPnlUsdc: number,
+  peakRealizedUsdc: number,
+  nowTs: number,
+): RiskState {
+  const state = initialRiskState(bankrollUsdc);
+  state.realizedUsdc = bankrollUsdc + settledPnlUsdc;
+  state.peakRealizedUsdc = Math.max(state.realizedUsdc, peakRealizedUsdc, bankrollUsdc);
+  state.equityUsdc = state.realizedUsdc;
+  state.dayKey = new Date(nowTs).toISOString().slice(0, 10);
+
+  for (const decision of openDecisions) {
+    if (decision.stakeUsdc <= 0) continue;
+    registerOpen(decision, state);
+    // registerOpen adds to stakedToday — only keep today's decisions there.
+    if (new Date(decision.decidedAtTs).toISOString().slice(0, 10) !== state.dayKey) {
+      state.stakedToday -= decision.stakeUsdc;
+    }
+  }
+  return state;
 }

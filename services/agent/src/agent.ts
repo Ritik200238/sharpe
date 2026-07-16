@@ -6,7 +6,7 @@ import { buildMatchReview } from "./intelligence/review";
 import { SuspensionMonitor } from "./intelligence/sprt";
 import { AgentConfig } from "./platform/config";
 import { AuthSession } from "./platform/auth";
-import { DEFAULT_LIMITS, RiskState, initialRiskState, registerSettlement } from "./risk/limits";
+import { DEFAULT_LIMITS, RiskState, rebuildRiskState, registerSettlement } from "./risk/limits";
 import { planActualOutcome } from "./settle/proofs";
 import { SettlementValidator } from "./settle/validate";
 import { MatchStateStore, goals } from "./state/match";
@@ -30,7 +30,8 @@ export interface AgentStatus {
   liveFixtures: number;
   trackedMarkets: number;
   equityUsdc: number;
-  peakEquityUsdc: number;
+  realizedUsdc: number;
+  peakRealizedUsdc: number;
   allocations: Record<string, number>;
   calibration: ReturnType<CalibrationTracker["report"]>;
   suspensions: Record<string, unknown>;
@@ -69,11 +70,21 @@ export class Agent {
     wallet: Keypair | null,
     private readonly log: (line: string) => void,
   ) {
-    this.riskState = initialRiskState(cfg.bankrollUsdc);
     // Replay runs get their own store — the live track record stays pure.
     this.track = new TrackStore(
       cfg.network.network,
       cfg.feedMode === "replay" ? "replay" : cfg.execMode,
+    );
+
+    // Crash-safe boot: rebuild the ENTIRE risk state from the persisted
+    // ledger — realized P&L, exposure maps, day counter, high-water mark.
+    const { pnlUsdc, peakRealizedUsdc } = this.track.settledPnl(cfg.bankrollUsdc);
+    this.riskState = rebuildRiskState(
+      cfg.bankrollUsdc,
+      this.track.openDecisions(),
+      pnlUsdc,
+      peakRealizedUsdc,
+      Date.now(),
     );
 
     if (cfg.execMode === "chain" && wallet) {
@@ -89,12 +100,6 @@ export class Agent {
         : null;
     }
 
-    // Rebuild open exposure from the persisted track record (crash-safe).
-    for (const decision of this.track.openDecisions()) {
-      if (decision.stakeUsdc > 0) {
-        this.riskState.equityUsdc -= decision.stakeUsdc;
-      }
-    }
   }
 
   status(): AgentStatus {
@@ -109,7 +114,8 @@ export class Agent {
       liveFixtures: this.matchStore.all().filter((m) => !m.finalised).length,
       trackedMarkets: this.oddsStore.all().reduce((s, f) => s + f.markets.size, 0),
       equityUsdc: Math.round(this.riskState.equityUsdc * 100) / 100,
-      peakEquityUsdc: Math.round(this.riskState.peakEquityUsdc * 100) / 100,
+      realizedUsdc: Math.round(this.riskState.realizedUsdc * 100) / 100,
+      peakRealizedUsdc: Math.round(this.riskState.peakRealizedUsdc * 100) / 100,
       allocations: Object.fromEntries(
         [...this.allocation.weights()].map(([k, v]) => [k, Math.round(v * 1000) / 1000]),
       ),
@@ -193,6 +199,13 @@ export class Agent {
     }
     if (delta.becameFinal) {
       await this.settleFixture(event.record.fixtureId, event.record);
+    } else if (
+      delta.state.finalised &&
+      this.track.openForFixture(event.record.fixtureId).length > 0
+    ) {
+      // Retry path: a proof that failed at first finalisation gets another
+      // attempt on any later record for the fixture.
+      await this.settleFixture(event.record.fixtureId, event.record);
     }
   }
 
@@ -217,15 +230,7 @@ export class Agent {
       limits: DEFAULT_LIMITS,
       mode: this.cfg.execMode,
       hasOpenSameOutcome: (fid, marketKey, outcomeIndex) =>
-        this.track
-          .openDecisions()
-          .some(
-            (d) =>
-              d.fixtureId === fid &&
-              d.marketKey === marketKey &&
-              d.outcomeIndex === outcomeIndex &&
-              d.stakeUsdc > 0,
-          ),
+        this.track.hasOpenSameOutcome(fid, marketKey, outcomeIndex),
     }, recvTs);
 
     for (const veto of output.vetoes) {
@@ -256,10 +261,9 @@ export class Agent {
     if (this.settling.has(fixtureId)) return; // idempotent
     const open = this.track.openForFixture(fixtureId);
     if (open.length === 0) return;
-    this.settling.add(fixtureId);
-
     const state = this.matchStore.get(fixtureId);
     if (!state) return;
+    this.settling.add(fixtureId);
     const finalGoals = goals(state);
     this.log(
       `[settle] fixture ${fixtureId} finalised ${finalGoals.p1}-${finalGoals.p2}; settling ${open.length} position(s)`,
@@ -280,6 +284,9 @@ export class Agent {
 
       const won = plan.actualOutcomeIndex === normalizeOutcomeIndex(decision, outcomes);
 
+      // With a validator available, the Merkle proof is LAW: no verified
+      // proof, no settlement. The position stays open and is retried on the
+      // fixture's next record — local score state alone never moves money.
       let verification: SettlementRecord["verification"];
       if (this.validator && this.session) {
         const seq = state.finalisedSeq ?? finalRecord.seq;
@@ -297,9 +304,14 @@ export class Agent {
           seq,
           txSigOrView: result.error ? `view-error: ${result.error}` : "view",
         };
-        this.log(
-          `[settle] proof ${result.verified ? "VERIFIED on-chain" : `FAILED (${result.error ?? "predicate false"})`} — ${plan.description}`,
-        );
+        if (!result.verified) {
+          this.log(
+            `[settle] proof FAILED (${result.error ?? "predicate false"}) — ${plan.description}; ` +
+              `position ${decision.hash.slice(0, 12)}… stays OPEN for retry`,
+          );
+          continue;
+        }
+        this.log(`[settle] proof VERIFIED on-chain — ${plan.description}`);
       }
 
       const pnlUsdc =
@@ -321,12 +333,15 @@ export class Agent {
       settledPairs.push({ decision, settlement });
 
       // Learn — deterministically — from the settled, provable outcome.
-      this.calibration.add({
-        modelProb: decision.modelProb,
-        marketProb: decision.marketProb,
-        won,
-      });
+      // Shadow (stake-0) settlements feed only the SPRT that governs the
+      // suspended strategy's re-enable; they must not move the global
+      // calibration that sizes healthy strategies.
       if (decision.stakeUsdc > 0) {
+        this.calibration.add({
+          modelProb: decision.modelProb,
+          marketProb: decision.marketProb,
+          won,
+        });
         this.allocation.recordSettlement(decision.strategy, pnlUsdc, decision.stakeUsdc);
       }
       this.suspension.recordSettlement(decision.strategy, decision.modelProb, won);

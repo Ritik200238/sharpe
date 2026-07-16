@@ -27,7 +27,12 @@ export interface SizingResult {
 
 export function sizePosition(inputs: SizingInputs): SizingResult {
   const { modelProb: p, priceDecimal: o } = inputs;
-  if (!(o > 1) || p <= 0 || p >= 1) return { stakeUsdc: 0, kellyFraction: 0 };
+  if (!Number.isFinite(o) || !(o > 1) || !(p > 0) || !(p < 1)) {
+    return { stakeUsdc: 0, kellyFraction: 0 };
+  }
+  if (!Number.isFinite(inputs.bankrollUsdc) || inputs.bankrollUsdc <= 0) {
+    return { stakeUsdc: 0, kellyFraction: 0 };
+  }
 
   const b = o - 1;
   const fullKelly = (b * p - (1 - p)) / b;
