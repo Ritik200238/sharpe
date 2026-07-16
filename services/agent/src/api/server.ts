@@ -77,8 +77,25 @@ export function startApiServer(
             uptimeSec: Math.floor(process.uptime()),
             now: new Date().toISOString(),
           });
-        case "/status":
-          return send(200, agent ? agent.status() : { phase: getPhase() });
+        case "/status": {
+          if (!agent) return send(200, { phase: getPhase() });
+          const digest = agent.digest(30);
+          const flagged = digest.strategies
+            .filter((s) => s.activity !== "active")
+            .map((s) => `${s.strategy}:${s.activity}`);
+          return send(200, {
+            ...agent.status(),
+            digestSummary:
+              `30d: ${digest.overall.decisions} decisions, ${digest.overall.settled} settled, ` +
+              `${digest.overall.wins}W/${digest.overall.settled - digest.overall.wins}L, ` +
+              `pnl ${digest.overall.pnlUsdc >= 0 ? "+" : ""}${digest.overall.pnlUsdc} USDC` +
+              (flagged.length ? ` | flags: ${flagged.join(", ")}` : ""),
+          });
+        }
+        case "/digest": {
+          const days = Math.min(365, Math.max(1, Number(url.searchParams.get("days") ?? 30)));
+          return send(200, agent ? agent.digest(days) : { phase: getPhase() });
+        }
         case "/decisions": {
           const limit = Number(url.searchParams.get("limit") ?? 50);
           return send(200, agent ? agent.recentDecisions(limit) : []);

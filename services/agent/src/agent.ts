@@ -17,6 +17,7 @@ import { DecisionRecord, SettlementRecord, StrategyId } from "./strategy/types";
 import { TrackStore } from "./track/store";
 import { ChainCommitter } from "./exec/commit";
 import { brainStream } from "./api/stream";
+import { Digest, buildDigest } from "./intelligence/digest";
 
 const STRATEGIES: StrategyId[] = ["S1_COHERENCE", "S2_REACTION", "S3_CONVERGENCE"];
 
@@ -174,6 +175,11 @@ export class Agent {
 
   reviews() {
     return this.track.reviews;
+  }
+
+  /** Season-so-far scorecard over the last N days (observational only). */
+  digest(windowDays = 30): Digest {
+    return buildDigest(this.track, Date.now(), windowDays);
   }
 
   /** Settle the write-ahead commit journal against the chain (call at boot,
