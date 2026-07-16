@@ -72,4 +72,5 @@ export function loadAgentConfig(argv: string[] = process.argv.slice(2)): AgentCo
 export const REPO_ROOT = path.resolve(__dirname, "..", "..", "..", "..");
 export const KEYS_DIR = path.join(REPO_ROOT, "_keys");
 export const RECORDINGS_DIR = path.join(REPO_ROOT, "data", "recordings");
-export const TRACK_DIR = path.join(REPO_ROOT, "data", "track");
+// Overridable so tests can isolate their track stores from real data.
+export const TRACK_DIR = process.env.SHARPE_TRACK_DIR ?? path.join(REPO_ROOT, "data", "track");

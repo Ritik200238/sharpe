@@ -87,6 +87,25 @@ export class Agent {
       Date.now(),
     );
 
+    // The intelligence layer must survive restarts too: replay the
+    // settlement ledger through the same calls settleFixture makes live.
+    // Ledger append order IS the exact live processing order (and floating-
+    // point accumulation is order-sensitive), so iterate it as persisted —
+    // calibration, allocation weights, and SPRT state resume bit-identical.
+    for (const settlement of this.track.settlements.values()) {
+      const decision = this.track.decisions.get(settlement.decisionHash);
+      if (!decision) continue;
+      if (decision.stakeUsdc > 0) {
+        this.calibration.add({
+          modelProb: decision.modelProb,
+          marketProb: decision.marketProb,
+          won: settlement.won,
+        });
+        this.allocation.recordSettlement(decision.strategy, settlement.pnlUsdc, decision.stakeUsdc);
+      }
+      this.suspension.recordSettlement(decision.strategy, decision.modelProb, settlement.won);
+    }
+
     if (cfg.execMode === "chain" && wallet) {
       const connection = new Connection(cfg.network.rpcUrl, "confirmed");
       this.committer = new ChainCommitter(cfg.network, wallet, (m) => this.log(`[chain] ${m}`));
@@ -314,10 +333,21 @@ export class Agent {
         this.log(`[settle] proof VERIFIED on-chain — ${plan.description}`);
       }
 
-      const pnlUsdc =
-        decision.stakeUsdc > 0
-          ? Math.round(registerSettlement(decision, won, this.riskState) * 100) / 100
-          : 0;
+      // Book EXACTLY what the ledger records: payouts round to cents, and
+      // the risk state is snapped to those cents so a rebuilt process
+      // (rebuildRiskState over the ledger) lands on identical numbers.
+      let pnlUsdc = 0;
+      if (decision.stakeUsdc > 0) {
+        const peakBefore = this.riskState.peakRealizedUsdc;
+        const rawPnl = registerSettlement(decision, won, this.riskState);
+        pnlUsdc = Math.round(rawPnl * 100) / 100;
+        const delta = pnlUsdc - rawPnl;
+        this.riskState.equityUsdc =
+          Math.round((this.riskState.equityUsdc + delta) * 100) / 100;
+        this.riskState.realizedUsdc =
+          Math.round((this.riskState.realizedUsdc + delta) * 100) / 100;
+        this.riskState.peakRealizedUsdc = Math.max(peakBefore, this.riskState.realizedUsdc);
+      }
 
       const settlement: SettlementRecord = {
         decisionHash: decision.hash,
