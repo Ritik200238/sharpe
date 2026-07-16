@@ -21,7 +21,8 @@ export interface TrackAggregates {
 }
 
 export class TrackStore {
-  private dir: string;
+  /** Track directory — also hosts the ChainCommitter's commits.ndjson. */
+  readonly dir: string;
   private decisionsFile: string;
   private settlementsFile: string;
   private reviewsFile: string;
@@ -76,12 +77,23 @@ export class TrackStore {
 
   updateDecisionCommit(hash: string, commitTxSig: string): void {
     const decision = this.decisions.get(hash);
-    if (!decision) return;
+    if (!decision || decision.commitTxSig === commitTxSig) return; // idempotent
     decision.commitTxSig = commitTxSig;
     // Append an amendment line rather than rewriting history.
     fs.appendFileSync(
       this.decisionsFile,
       `${JSON.stringify({ hash, commitTxSig, amend: true })}\n`,
+    );
+  }
+
+  updateSettlementCommit(decisionHash: string, commitTxSig: string): void {
+    const settlement = this.settlements.get(decisionHash);
+    if (!settlement || settlement.commitTxSig === commitTxSig) return; // idempotent
+    settlement.commitTxSig = commitTxSig;
+    // Same amend-line idiom as updateDecisionCommit — history is never rewritten.
+    fs.appendFileSync(
+      this.settlementsFile,
+      `${JSON.stringify({ decisionHash, commitTxSig, amend: true })}\n`,
     );
   }
 
@@ -160,7 +172,7 @@ export class TrackStore {
 function readNdjson<T>(file: string): T[] {
   if (!fs.existsSync(file)) return [];
   const out: T[] = [];
-  const amendments: Array<{ hash: string; commitTxSig: string }> = [];
+  const amendments: Array<{ hash?: string; decisionHash?: string; commitTxSig: string }> = [];
   for (const line of fs.readFileSync(file, "utf8").split("\n")) {
     if (!line.trim()) continue;
     try {
@@ -172,7 +184,12 @@ function readNdjson<T>(file: string): T[] {
     }
   }
   for (const amendment of amendments) {
-    const target = (out as any[]).find((r) => r.hash === amendment.hash);
+    // Decision amends carry `hash`; settlement amends carry `decisionHash`.
+    const target = (out as any[]).find((r) =>
+      amendment.decisionHash !== undefined
+        ? r.decisionHash === amendment.decisionHash
+        : r.hash === amendment.hash,
+    );
     if (target) target.commitTxSig = amendment.commitTxSig;
   }
   return out;

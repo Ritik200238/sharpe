@@ -108,7 +108,21 @@ export class Agent {
 
     if (cfg.execMode === "chain" && wallet) {
       const connection = new Connection(cfg.network.rpcUrl, "confirmed");
-      this.committer = new ChainCommitter(cfg.network, wallet, (m) => this.log(`[chain] ${m}`));
+      this.committer = new ChainCommitter(
+        cfg.network,
+        wallet,
+        (m) => this.log(`[chain] ${m}`),
+        this.track.dir,
+        {
+          // Fires on the send path AND the boot/timer reconcile path, so a
+          // commitment confirmed after a crash still backfills its record.
+          onConfirmed: (kind, hash, sig) => {
+            if (kind === "decision") this.track.updateDecisionCommit(hash, sig);
+            else if (kind === "settlement") this.track.updateSettlementCommit(hash, sig);
+            // reviews stay journal-only
+          },
+        },
+      );
       this.validator = this.session
         ? new SettlementValidator(cfg.network, connection, wallet)
         : null;
@@ -159,6 +173,12 @@ export class Agent {
 
   reviews() {
     return this.track.reviews;
+  }
+
+  /** Settle the write-ahead commit journal against the chain (call at boot,
+   * before run()): landed intents backfill records, expired ones resubmit. */
+  async reconcileCommits(): Promise<void> {
+    if (this.committer) await this.committer.reconcile();
   }
 
   /** The loop. Runs until the feed ends (replay) or stop() (live: never). */
@@ -382,7 +402,9 @@ export class Agent {
       );
 
       if (this.committer) {
-        void this.committer.commit("settlement", decision.hash);
+        void this.committer.commit("settlement", decision.hash).then((sig) => {
+          if (sig) this.track.updateSettlementCommit(decision.hash, sig);
+        });
       }
     }
 

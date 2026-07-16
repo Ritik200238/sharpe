@@ -32,6 +32,7 @@ async function main(): Promise<void> {
     const wallet = tryLoadWallet(cfg);
     const session = trySession(cfg);
     agent = new Agent(cfg, feed, session, wallet, log);
+    await agent.reconcileCommits();
     await agent.run();
     phase = "replay complete";
     log("[main] replay finished — api stays up for inspection");
@@ -51,6 +52,7 @@ async function main(): Promise<void> {
   const feed: FeedSource = new LiveFeed(cfg.network, session);
   const wallet = tryLoadWallet(cfg);
   agent = new Agent(cfg, feed, session, wallet, log);
+  await agent.reconcileCommits();
   await agent.run();
 }
 
