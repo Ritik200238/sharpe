@@ -70,7 +70,11 @@ export class Agent {
     private readonly log: (line: string) => void,
   ) {
     this.riskState = initialRiskState(cfg.bankrollUsdc);
-    this.track = new TrackStore(cfg.network.network, cfg.execMode);
+    // Replay runs get their own store — the live track record stays pure.
+    this.track = new TrackStore(
+      cfg.network.network,
+      cfg.feedMode === "replay" ? "replay" : cfg.execMode,
+    );
 
     if (cfg.execMode === "chain" && wallet) {
       const connection = new Connection(cfg.network.rpcUrl, "confirmed");
