@@ -16,6 +16,7 @@ import { runEngine } from "./strategy/engine";
 import { DecisionRecord, SettlementRecord, StrategyId } from "./strategy/types";
 import { TrackStore } from "./track/store";
 import { ChainCommitter } from "./exec/commit";
+import { brainStream } from "./api/stream";
 
 const STRATEGIES: StrategyId[] = ["S1_COHERENCE", "S2_REACTION", "S3_CONVERGENCE"];
 
@@ -204,6 +205,10 @@ export class Agent {
     }
     if (event.kind === "status") {
       this.log(`[feed:${event.stream}] ${event.message}`);
+      brainStream.publish("status", event.recvTs, {
+        stream: event.stream,
+        message: event.message,
+      });
       return;
     }
 
@@ -284,6 +289,7 @@ export class Agent {
 
     for (const decision of output.decisions) {
       this.track.addDecision(decision);
+      brainStream.publish("decision", decision.decidedAtTs, decision);
       this.log(
         `[decide] ${decision.strategy} ${decision.stakeUsdc} USDC on ${decision.outcomeName.toUpperCase()} ` +
           `(${decision.marketKey}) @ ${decision.priceDecimal} | ${decision.reason}`,
@@ -380,6 +386,7 @@ export class Agent {
         verification,
       };
       this.track.addSettlement(settlement);
+      brainStream.publish("settlement", settlement.settledAtTs, settlement);
       settledPairs.push({ decision, settlement });
 
       // Learn — deterministically — from the settled, provable outcome.
@@ -415,6 +422,7 @@ export class Agent {
       finalRecord.ts,
     );
     this.track.addReview(review);
+    brainStream.publish("review", review.generatedAtTs, review);
     this.log(`[review] ${review.notes.join(" | ")}`);
     if (this.committer) void this.committer.commit("review", review.hash);
     this.settling.delete(fixtureId);

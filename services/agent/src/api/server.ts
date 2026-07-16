@@ -2,6 +2,7 @@ import * as http from "node:http";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { Agent } from "../agent";
+import { StreamFilters, brainStream, formatSse, matchesFilters } from "./stream";
 
 /**
  * Read-only status API + dashboard. This is how judges verify the agent is
@@ -35,6 +36,40 @@ export function startApiServer(
       switch (url.pathname) {
         case "/":
           return send(200, dashboard, "text/html; charset=utf-8");
+        case "/stream": {
+          // Live brain feed over SSE — filters, heartbeat, resume.
+          const filters: StreamFilters = {};
+          const strategy = url.searchParams.get("strategy");
+          if (strategy) filters.strategy = strategy;
+          const fixtureId = url.searchParams.get("fixtureId");
+          if (fixtureId) filters.fixtureId = Number(fixtureId);
+
+          res.writeHead(200, {
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-store",
+            "Access-Control-Allow-Origin": "*",
+            Connection: "keep-alive",
+          });
+          res.write(": connected\n\n");
+
+          const lastEventId = req.headers["last-event-id"];
+          for (const event of brainStream.replayAfter(
+            typeof lastEventId === "string" ? lastEventId : undefined,
+          )) {
+            if (matchesFilters(event, filters)) res.write(formatSse(event));
+          }
+
+          const unsubscribe = brainStream.subscribe((event) => {
+            if (matchesFilters(event, filters)) res.write(formatSse(event));
+          });
+          const heartbeat = setInterval(() => res.write(": hb\n\n"), 15_000);
+          heartbeat.unref();
+          req.on("close", () => {
+            clearInterval(heartbeat);
+            unsubscribe();
+          });
+          return; // socket stays open
+        }
         case "/health":
           return send(200, {
             ok: true,

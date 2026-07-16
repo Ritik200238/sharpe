@@ -120,7 +120,21 @@ async function tick() {
     }
   } catch (e) { $("phase").textContent = "api unreachable — retrying"; }
 }
-tick(); setInterval(tick, 2000);
+tick();
+
+// Live push: the agent's brain feed over SSE, with polling as fallback.
+let pollMs = 10000;
+try {
+  const es = new EventSource("/stream");
+  for (const type of ["decision", "settlement", "review", "status"]) {
+    es.addEventListener(type, () => tick()); // poll-on-push keeps one render path
+  }
+  es.onerror = () => { pollMs = 2000; }; // stream down → fast polling
+  es.onopen = () => { pollMs = 10000; };
+} catch { pollMs = 2000; }
+(async function poll() {
+  for (;;) { await new Promise(r => setTimeout(r, pollMs)); await tick(); }
+})();
 </script>
 </body>
 </html>
