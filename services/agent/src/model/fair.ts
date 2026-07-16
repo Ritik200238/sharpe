@@ -22,6 +22,7 @@ const NAME_SETS: Record<MarketFamily, string[][]> = {
   WIN_DRAW_WIN: [
     ["1", "x", "2"],
     ["home", "draw", "away"],
+    ["part1", "draw", "part2"], // TxLINE StablePrice naming
   ],
   TOTAL_GOALS: [["over", "under"]],
   BOTH_TEAMS_SCORE: [
@@ -64,9 +65,14 @@ export function classifyMarket(record: OddsRecord): MarketView | null {
   }
   if (!family) return null;
 
-  // Totals need a line; only full-match markets are settle-able v1.
+  // Totals need a line — and only HALF lines (x.5). Integer and quarter
+  // lines can push or split stakes, which is neither binary nor provable
+  // as a single on-chain predicate. Design law: if we can't settle it
+  // trustlessly, we don't trade it.
   const line = family === "TOTAL_GOALS" ? extractLine(record.marketParameters) : undefined;
-  if (family === "TOTAL_GOALS" && line === undefined) return null;
+  if (family === "TOTAL_GOALS" && (line === undefined || Math.abs((line * 2) % 2) !== 1)) {
+    return null;
+  }
   const period = (record.marketPeriod ?? "").toLowerCase();
   if (period && !["ft", "full", "fulltime", "full time", "match", "90", "reg"].some((p) => period.includes(p))) {
     return null;

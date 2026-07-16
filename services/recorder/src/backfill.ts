@@ -54,15 +54,17 @@ export async function backfill(cfg: NetworkConfig, session: AuthSession): Promis
     );
     const scoresFile = path.join(dir, "scores.ndjson");
     const oddsFile = path.join(dir, "odds.ndjson");
-    if (fs.existsSync(scoresFile)) {
+    if (fs.existsSync(scoresFile) && fs.statSync(scoresFile).size > 0) {
       console.log(`[backfill] fixture ${fixture.FixtureId} already backfilled — skipping`);
       continue;
     }
 
     try {
-      const scores = await apiGet<any[]>(cfg, session, `/scores/historical/${fixture.FixtureId}`);
-      const odds = await apiGet<any[]>(cfg, session, `/odds/updates/${fixture.FixtureId}`).catch(
-        () => [] as any[],
+      const scores = normalizeRecords(
+        await apiGet<unknown>(cfg, session, `/scores/historical/${fixture.FixtureId}`),
+      );
+      const odds = normalizeRecords(
+        await apiGet<unknown>(cfg, session, `/odds/updates/${fixture.FixtureId}`).catch(() => []),
       );
 
       fs.mkdirSync(dir, { recursive: true });
@@ -79,6 +81,27 @@ export async function backfill(cfg: NetworkConfig, session: AuthSession): Promis
     }
   }
   console.log("[backfill] complete");
+}
+
+/**
+ * Endpoints answer in different shapes: JSON arrays, or SSE-formatted text
+ * ("data: {...}" per line — the historical endpoint does this). Normalize
+ * everything to an array of records.
+ */
+function normalizeRecords(response: unknown): any[] {
+  if (Array.isArray(response)) return response;
+  if (typeof response !== "string") return [];
+  const records: any[] = [];
+  for (const rawLine of response.split(/\r?\n/)) {
+    const line = rawLine.startsWith("data:") ? rawLine.slice(5).trim() : rawLine.trim();
+    if (!line || !line.startsWith("{")) continue;
+    try {
+      records.push(JSON.parse(line));
+    } catch {
+      // tolerate torn lines
+    }
+  }
+  return records;
 }
 
 function writeJournal(
