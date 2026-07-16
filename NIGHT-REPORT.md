@@ -64,9 +64,26 @@ lets us backfill the semifinals once credentials exist.
   currently trusts the de-margined `Pct` field (documented) and skips markets without
   it. Will confirm against live data.
 
+## The autonomous chain, armed and running right now
+
+Three processes are live in the background as you read this:
+
+1. **Bootstrap** — retries the faucet politely; on success: TxLINE signup →
+   **auto-backfill of all recent World Cup fixtures (the semifinals) via the
+   historical endpoints** → live stream recording. Zero clicks needed.
+2. **Credentials watcher** — pings me the moment signup succeeds so I verify streams.
+3. **The agent itself** — already running at `http://localhost:8787`
+   (phase: "waiting for TxLINE credentials", re-checks every 30s). The instant
+   credentials exist it starts trading the live devnet feeds in paper mode,
+   no restart needed.
+
+So the full chain — SOL → signup → semifinal backfill → live recording → agent
+trading live — executes itself. The one accelerator only you can do: the faucet
+click (see above).
+
 ## Next (priority order, per PLAN.md)
 
-1. SOL lands → signup → **record real World Cup data** (final is July 19!).
+1. SOL lands → chain above fires itself → **verify real data quality** (final is July 19!).
 2. Replay a REAL match through the agent; tune thresholds against reality.
 3. `validateStatV2` spike against real proofs (task from PLAN P3).
 4. Anchor escrow market program → vault → registry.
