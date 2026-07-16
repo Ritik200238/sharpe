@@ -1,3 +1,6 @@
+import { backfill } from "./backfill";
+import { AuthSession, loadCredentials } from "./auth";
+import { loadConfig } from "./config";
 import { record, setup } from "./flows";
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -23,7 +26,18 @@ async function main(): Promise<void> {
     }
   }
 
-  console.log("[bootstrap] setup complete — starting recorder");
+  console.log("[bootstrap] setup complete — backfilling recent fixtures");
+  try {
+    const cfg = loadConfig();
+    const credentials = loadCredentials(cfg.network);
+    if (credentials?.apiToken) {
+      await backfill(cfg, new AuthSession(cfg, credentials.jwt, credentials.apiToken));
+    }
+  } catch (error: any) {
+    console.log(`[bootstrap] backfill failed (recording anyway): ${error?.message ?? error}`);
+  }
+
+  console.log("[bootstrap] starting recorder");
   for (;;) {
     try {
       await record();
