@@ -109,6 +109,11 @@ export function synthesizeMatch(seed = 42, fixtureId = 90000001): SyntheticMatch
     pushOdds(ts, "1X2", ["1", "X", "2"], [h, d, a], undefined, inRunning);
     const over = Math.min(0.95, Math.max(0.05, pOver + jitter()));
     pushOdds(ts, "Total Goals", ["Over", "Under"], [over, 1 - over], "2.5", inRunning);
+    // A second, correlated totals line and BTTS widen the tradable surface.
+    const over35 = Math.min(0.9, Math.max(0.03, over - 0.24 + jitter() / 2));
+    pushOdds(ts, "Total Goals", ["Over", "Under"], [over35, 1 - over35], "3.5", inRunning);
+    const btts = Math.min(0.92, Math.max(0.05, over * 0.82 + 0.08 + jitter()));
+    pushOdds(ts, "Both Teams To Score", ["Yes", "No"], [btts, 1 - btts], undefined, inRunning);
   };
 
   // Pre-match: 30 minutes of quotes each minute.

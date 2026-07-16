@@ -14,8 +14,10 @@ export interface EngineDeps {
   riskState: RiskState;
   limits: RiskLimits;
   mode: "paper" | "chain";
-  /** Open (fixtureId|marketKey) exposures to avoid stacking. */
-  hasOpenPosition: (fixtureId: number, marketKey: string) => boolean;
+  /** True when an identical exposure (same market, same outcome) is open.
+   * Different outcomes/strategies may coexist — the per-market and
+   * per-fixture exposure caps in risk/limits govern total stacking. */
+  hasOpenSameOutcome: (fixtureId: number, marketKey: string, outcomeIndex: number) => boolean;
 }
 
 export interface EngineOutput {
@@ -40,8 +42,8 @@ export function runEngine(ctx: StrategyContext, deps: EngineDeps, freshestFeedTs
     const intents = ALL_STRATEGIES[strategyId](ctx);
 
     for (const intent of intents) {
-      if (deps.hasOpenPosition(intent.fixtureId, intent.marketKey)) {
-        vetoes.push({ intent, reason: "position already open on this market" });
+      if (deps.hasOpenSameOutcome(intent.fixtureId, intent.marketKey, intent.outcomeIndex)) {
+        vetoes.push({ intent, reason: "identical position already open" });
         continue;
       }
 

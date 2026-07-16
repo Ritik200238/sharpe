@@ -57,11 +57,11 @@ async function runPipeline(replayDir: string): Promise<string[]> {
       };
       const out = runEngine(
         ctx,
-        { ...deps, hasOpenPosition: (f, m) => open.has(`${f}|${m}`) },
+        { ...deps, hasOpenSameOutcome: (f, m, o) => open.has(`${f}|${m}|${o}`) },
         event.recvTs,
       );
       for (const d of out.decisions) {
-        open.add(`${d.fixtureId}|${d.marketKey}`);
+        open.add(`${d.fixtureId}|${d.marketKey}|${d.outcomeIndex}`);
         hashes.push(d.hash);
       }
     } else if (event.kind === "score") {
@@ -92,11 +92,11 @@ async function runPipeline(replayDir: string): Promise<string[]> {
       };
       const out = runEngine(
         ctx,
-        { ...deps, hasOpenPosition: (f, m) => open.has(`${f}|${m}`) },
+        { ...deps, hasOpenSameOutcome: (f, m, o) => open.has(`${f}|${m}|${o}`) },
         event.recvTs,
       );
       for (const d of out.decisions) {
-        open.add(`${d.fixtureId}|${d.marketKey}`);
+        open.add(`${d.fixtureId}|${d.marketKey}|${d.outcomeIndex}`);
         hashes.push(d.hash);
       }
     }

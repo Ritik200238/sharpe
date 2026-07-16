@@ -212,10 +212,16 @@ export class Agent {
       riskState: this.riskState,
       limits: DEFAULT_LIMITS,
       mode: this.cfg.execMode,
-      hasOpenPosition: (fid, marketKey) =>
+      hasOpenSameOutcome: (fid, marketKey, outcomeIndex) =>
         this.track
           .openDecisions()
-          .some((d) => d.fixtureId === fid && d.marketKey === marketKey && d.stakeUsdc > 0),
+          .some(
+            (d) =>
+              d.fixtureId === fid &&
+              d.marketKey === marketKey &&
+              d.outcomeIndex === outcomeIndex &&
+              d.stakeUsdc > 0,
+          ),
     }, recvTs);
 
     for (const veto of output.vetoes) {
