@@ -1,0 +1,20 @@
+# secrets — never commit
+_keys/
+*.keypair.json
+.env
+.env.*
+
+# recorded data (large; managed separately)
+data/
+
+# deps/build
+node_modules/
+dist/
+*.tsbuildinfo
+
+# vendor reference clone (not ours)
+vendor/
+
+# os/editor
+.DS_Store
+Thumbs.db

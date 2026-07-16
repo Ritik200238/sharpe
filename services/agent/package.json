@@ -1,0 +1,24 @@
+{
+  "name": "@sharpe/agent",
+  "private": true,
+  "version": "0.1.0",
+  "description": "SHARPE — the autonomous sports trading agent with an unfakeable public track record.",
+  "scripts": {
+    "start": "tsx src/main.ts",
+    "replay": "tsx src/main.ts --mode replay",
+    "test": "tsx --test test/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "0.32.1",
+    "@solana/spl-token": "^0.4.12",
+    "@solana/web3.js": "^1.91.9",
+    "axios": "^1.12.0",
+    "tweetnacl": "^1.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.3"
+  }
+}

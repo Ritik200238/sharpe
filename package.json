@@ -1,0 +1,15 @@
+{
+  "name": "sharpe",
+  "private": true,
+  "version": "0.1.0",
+  "description": "The autonomous sports trading agent with an unfakeable public track record.",
+  "workspaces": [
+    "services/*"
+  ],
+  "scripts": {
+    "recorder": "npm run --workspace services/recorder"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
