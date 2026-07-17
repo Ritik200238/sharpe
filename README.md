@@ -83,9 +83,11 @@ npx tsx services/agent/tools/synthesize.ts
 npm run replay --workspace services/agent -- --replay-dir data/synthetic
 
 # 4. watch it think
-open http://localhost:8787        # dashboard
-curl  http://localhost:8787/status
-curl  http://localhost:8787/decisions
+open http://localhost:8787        # dashboard (live-updating)
+curl  http://localhost:8787/status        # brain state + 30-day digest summary
+curl  http://localhost:8787/decisions     # glass-box decision feed
+curl  http://localhost:8787/digest?days=7 # season scorecard + inactivity flags
+curl -N http://localhost:8787/stream      # live brain feed (SSE; ?strategy=, ?fixtureId=)
 
 # tests (17: model math, intelligence layer, bit-for-bit determinism)
 npm test --workspace services/agent
@@ -114,10 +116,16 @@ settlements through `validateStatV2`.
 - [x] Deterministic brain: de-vig, λ-solver, in-play Poisson, S1–S3, risk engine
 - [x] Intelligence layer: calibration-scaled Kelly, UCB allocation, SPRT self-suspension, on-chain self-reviews
 - [x] Track record store: append-only, event-sourced, crash-safe
-- [x] Settlement: proof planning for every supported market + `validateStatV2` client
-- [x] 17-test suite incl. bit-for-bit determinism over full pipeline
-- [ ] Devnet SOL funding (faucet quota) → signup → live recording (automated, pending faucet)
-- [ ] Anchor programs (escrow market, vault, registry) — next phase
+- [x] TxLINE signup live on devnet (on-chain free-tier subscription, activated API token)
+- [x] Real corpus: 20 complete World Cup knockout matches recovered via historical endpoints
+- [x] **Trustless settlement proven on real data** — England 1-2 Argentina verified via
+      `validateStatV2` against the on-chain Merkle root (true claim accepted, false claim rejected)
+- [x] Live 24/7: agent trading the real devnet streams (paper mode); recorder capturing
+- [x] Hardening: boot-time intelligence rebuild · write-ahead commit journal with boot
+      reconcile · `GET /stream` live brain feed (SSE) · `GET /digest` season scorecard
+- [x] 36-test suite incl. bit-for-bit determinism over the full pipeline
+- [ ] 20-match backtest report (harness built, sweep running)
+- [ ] Anchor programs (escrow market, vault, registry) — P3, toolchain confirmed working
 - [ ] Demo video + deployment
 
 ---
