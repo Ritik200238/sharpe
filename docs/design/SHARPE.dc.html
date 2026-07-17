@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<title>SHARPE — autonomous sports trading agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;padding:0;background:#0B0C0F}
+a{color:#B7F542;text-decoration:none}
+a:hover{color:#D3FF7A;text-decoration:underline}
+*{box-sizing:border-box}
+::selection{background:rgba(183,245,66,.25)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+@media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important}}
+</style>
+</helmet>
+<div style="min-height:100vh;background:#0B0C0F;color:#E7EAF0;font-family:'Space Grotesk',system-ui,sans-serif;font-size:14px;line-height:1.5">
+<div aria-live="polite" style="position:absolute;left:-9999px;top:0">{{ announce }}</div>
+<header style="position:sticky;top:0;z-index:50;background:rgba(11,12,15,.92);backdrop-filter:blur(14px);border-bottom:1px solid #1E222B">
+  <div style="max-width:1400px;margin:0 auto;padding:0 20px;height:56px;display:flex;align-items:center;gap:20px">
+    <button onClick="{{ goCommand }}" aria-label="SHARPE — command view" style="all:unset;cursor:pointer;display:flex;align-items:baseline" style-focus="outline:2px solid #B7F542;outline-offset:3px">
+      <span style="font-weight:700;font-size:17px;letter-spacing:.08em">SHARPE</span><span style="display:inline-block;width:8px;height:14px;background:#B7F542;margin-left:3px;transform:translateY(1px)"></span>
+    </button>
+    <nav aria-label="Primary" style="display:flex;gap:2px">
+      <sc-for list="{{ nav }}" as="n" hint-placeholder-count="4">
+        <button onClick="{{ n.onClick }}" style="{{ n.style }}" style-focus="outline:2px solid #B7F542;outline-offset:2px">{{ n.label }}</button>
+      </sc-for>
+    </nav>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9AA3B5;border:1px solid #2A3040;border-radius:5px;padding:2px 8px">{{ netLabel }}</span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9AA3B5;border:1px solid #2A3040;border-radius:5px;padding:2px 8px">feed: {{ feedLabel }}</span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9AA3B5;border:1px solid #2A3040;border-radius:5px;padding:2px 8px">exec: {{ execLabel }}</span>
+      <span style="display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#C9D2E3">
+        <span style="width:8px;height:8px;border-radius:50%;background:{{ connColor }};animation:pulse 2.2s infinite"></span>{{ connLabel }}
+      </span>
+    </div>
+  </div>
+</header>
+
+<main style="max-width:1400px;margin:0 auto;padding:24px 20px 60px">
+
+<sc-if value="{{ isCommand }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Command">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:12px">
+    <div style="background:#12141A;border:1px solid #1E222B;border-radius:10px;padding:14px 16px">
+      <div style="font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#6B7386;font-weight:600">Realized bankroll</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;margin-top:4px">{{ realizedStr }} <span style="font-size:12px;color:#6B7386">USDC</span></div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:{{ realizedTone }};margin-top:2px">{{ realizedDelta }} · peak {{ peakStr }}</div>
+    </div>
+    <div style="background:#12141A;border:1px solid #1E222B;border-radius:10px;padding:14px 16px">
+      <div style="font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#6B7386;font-weight:600">Equity (cash on hand)</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;margin-top:4px">{{ equityStr }} <span style="font-size:12px;color:#6B7386">USDC</span></div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9AA3B5;margin-top:2px">{{ escrowNote }}</div>
+    </div>
+    <button onClick="{{ goOpenLedger }}" style="text-align:left;cursor:pointer;background:#12141A;border:1px solid #1E222B;border-radius:10px;padding:14px 16px;color:#E7EAF0;font-family:inherit" style-hover="border-color:#3A4256" style-focus="outline:2px solid #B7F542;outline-offset:2px">
+      <div style="font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#6B7386;font-weight:600">Open positions</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;margin-top:4px">{{ openCount }}</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9AA3B5;margin-top:2px">{{ openNote }}</div>
+    </button>
+    <div style="background:#12141A;border:1px solid #1E222B;border-radius:10px;padding:14px 16px">
+      <div style="font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#6B7386;font-weight:600">All-time P&amp;L</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;margin-top:4px;color:{{ pnlAggTone }}">{{ pnlAggStr }} <span style="font-size:12px;color:#6B7386">USDC</span></div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9AA3B5;margin-top:2px">{{ pnlAggNote }}</div>
+    </div>
+    <div style="background:#12141A;border:1px solid #1E222B;border-radius:10px;padding:14px 16px">
+      <div style="font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#6B7386;font-weight:600">Calibration factor</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;margin-top:4px">{{ calFactorStr }}</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9AA3B5;margin-top:2px">{{ calNote }}</div>
+    </div>
+  </div>
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8A93A5;background:#0E1015;border:1px solid #1E222B;border-radius:8px;padding:8px 14px;margin-bottom:18px;overflow-x:auto;white-space:nowrap">{{ digestSummary }}</div>
+
+  <div style="display:grid;grid-template-columns:minmax(0,1.7fr) minmax(280px,1fr);gap:16px;align-items:start">
+    <section aria-label="Agent feed" style="min-width:0">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <h2 style="margin:0;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#9AA3B5;font-weight:600">Agent feed</h2>
+        <span style="width:7px;height:7px;border-radius:50%;background:{{ connColor }};animation:pulse 2.2s infinite"></span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6B7386">{{ pausedNote }}</span>
+        <button onClick="{{ togglePause }}" style="margin-left:auto;cursor:pointer;background:#171A21;border:1px solid #2A3040;color:#C9D2E3;border-radius:6px;padding:4px 12px;font-family:'IBM Plex Mono',monospace;font-size:11px" style-hover="border-color:#B7F542;color:#E7EAF0" style-focus="outline:2px solid #B7F542;outline-offset:2px">{{ pauseLabel }}</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ feed }}" as="e" hint-placeholder-count="5">
+          <button onClick="{{ e.onClick }}" style="text-align:left;cursor:pointer;background:#12141A;border:1px solid #1E222B;border-left:3px solid {{ e.accent }};border-radius:8px;padding:11px 14px;color:#E7EAF0;font-family:inherit;width:100%" style-hover="border-color:#3A4256;border-left-color:{{ e.accent }}" style-focus="outline:2px solid #B7F542;outline-offset:2px">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.1em;color:{{ e.kindColor }};border:1px solid {{ e.kindColor }};border-radius:4px;padding:1px 6px;opacity:.95">{{ e.kind }}</span>
+              <sc-if value="{{ e.strat }}" hint-placeholder-val="{{ false }}">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;color:{{ e.stratColor }}">{{ e.strat }}</span>
+              </sc-if>
+              <span style="font-size:13px;font-weight:600;min-width:0">{{ e.title }}</span>
+              <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6B7386;white-space:nowrap">{{ e.ago }}</span>
+            </div>
+            <sc-if value="{{ e.showReason }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:6px;font-size:12.5px;color:#9AA3B5;line-height:1.45">{{ e.reason }}</div>
+            </sc-if>
+            <sc-if value="{{ e.hasChips }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:7px;display:flex;gap:6px;flex-wrap:wrap">
+                <sc-for list="{{ e.chips }}" as="c" hint-placeholder-count="2">
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:{{ c.color }};background:#0E1015;border:1px solid #232833;border-radius:5px;padding:2px 8px;white-space:nowrap">{{ c.t }}</span>
+                </sc-for>
+              </div>
+            </sc-if>
+          </button>
+        </sc-for>
+      </div>
+    </section>
+
+    <aside style="display:flex;flex-direction:column;gap:14px;min-width:0">
+      <section style="background:#12141A;border:1px solid #1E222B;border-radius:10px;padding:16px">
+        <h2 style="margin:0 0 10px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6B7386;font-weight:600">Feed liveness</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-family:'IBM Plex Mono',monospace;font-size:12px">
+          <div><div style="color:#6B7386;font-size:10.5px">last event</div><div style="color:#E7EAF0">{{ lastEventAgo }}</div></div>
+          <div><div style="color:#6B7386;font-size:10.5px">live fixtures</div><div style="color:#E7EAF0">{{ liveFixtures }}</div></div>
+          <div><div style="color:#6B7386;font-size:10.5px">odds msgs</div><div style="color:#E7EAF0">{{ evOdds }}</div></div>
+          <div><div style="color:#6B7386;font-size:10.5px">score msgs</div><div style="color:#E7EAF0">{{ evScore }}</div></div>
+          <div><div style="color:#6B7386;font-size:10.5px">heartbeats</div><div style="color:#E7EAF0">{{ evHb }}</div></div>
+          <div><div style="color:#6B7386;font-size:10.5px">tracked markets</div><div style="color:#E7EAF0">{{ trackedMarkets }}</div></div>
+        </div>
+        <div style="margin-top:10px;font-size:11.5px;color:#6B7386;line-height:1.5">Odds ticks arrive nearly continuously while any covered fixture is active. A quiet feed with fresh ticks means: nothing worth trading — a healthy state.</div>
+      </section>
+
+      <section style="background:#12141A;border:1px solid #1E222B;border-radius:10px;padding:16px">
+        <h2 style="margin:0 0 10px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6B7386;font-weight:600">Capital allocation</h2>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <sc-for list="{{ alloc }}" as="a" hint-placeholder-count="3">
+            <div>
+              <div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11.5px;margin-bottom:4px">
+                <span style="color:{{ a.color }};font-weight:600">{{ a.label }}</span><span style="color:#C9D2E3">{{ a.pctStr }}</span>
+              </div>
+              <div style="height:5px;background:#0E1015;border-radius:3px;overflow:hidden"><div style="height:100%;width:{{ a.width }};background:{{ a.color }};border-radius:3px;transition:width .8s ease"></div></div>
+              <sc-if value="{{ a.note }}" hint-placeholder-val="{{ false }}"><div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#FF7A76;margin-top:3px">{{ a.note }}</div></sc-if>
+            </div>
+          </sc-for>
+        </div>
+        <div style="margin-top:10px;font-size:11.5px;color:#6B7386">Re-derived continuously from realized ROI (UCB).</div>
+      </section>
+
+      <section style="background:#12141A;border:1px solid #1E222B;border-radius:10px;padding:16px">
+        <h2 style="margin:0 0 10px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6B7386;font-weight:600">Self-regulation</h2>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div><div style="color:#6B7386;font-size:10.5px">model Brier</div><div>{{ calModelBrier }}</div></div>
+          <div><div style="color:#6B7386;font-size:10.5px">market Brier</div><div>{{ calMarketBrier }}</div></div>
+          <div><div style="color:#6B7386;font-size:10.5px">advantage</div><div>{{ calAdvantage }}</div></div>
+          <div><div style="color:#6B7386;font-size:10.5px">samples</div><div>{{ calSamples }}</div></div>
+        </div>
+        <div style="margin-top:8px;font-size:11.5px;color:#9AA3B5">{{ calMeaning }}</div>
+        <div style="margin-top:12px;display:flex;flex-direction:column;gap:6px">
+          <sc-for list="{{ susp }}" as="s" hint-placeholder-count="3">
+            <div style="display:flex;align-items:center;gap:8px;font-family:'IBM Plex Mono',monospace;font-size:11.5px">
+              <span style="color:{{ s.color }};font-weight:600;width:34px">{{ s.label }}</span>
+              <span style="color:{{ s.stateColor }}">{{ s.stateLabel }}</span>
+              <span style="margin-left:auto;color:#6B7386">{{ s.detail }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+
+      <section style="background:#12141A;border:1px solid #1E222B;border-radius:10px;padding:16px">
+        <h2 style="margin:0 0 10px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6B7386;font-weight:600">Recent vetoes — trades the agent refused</h2>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{ vetoes }}" as="v" hint-placeholder-count="3">
+            <div style="font-size:12px;border-left:2px solid #2A3040;padding-left:10px">
+              <div style="display:flex;gap:8px;font-family:'IBM Plex Mono',monospace;font-size:10.5px"><span style="color:{{ v.color }};font-weight:600">{{ v.strat }}</span><span style="margin-left:auto;color:#6B7386">{{ v.ago }}</span></div>
+              <div style="color:#9AA3B5;margin-top:2px">{{ v.reason }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+    </aside>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isLedger }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Ledger">
+  <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:14px">
+    <h1 style="margin:0;font-size:20px;font-weight:700">Track record</h1>
+    <span style="font-size:12.5px;color:#6B7386">append-only · every decision and settlement, wins and losses alike</span>
+    <button onClick="{{ toggleRaw }}" style="margin-left:auto;cursor:pointer;background:#171A21;border:1px solid #2A3040;color:#C9D2E3;border-radius:6px;padding:5px 12px;font-family:'IBM Plex Mono',monospace;font-size:11px" style-hover="border-color:#B7F542" style-focus="outline:2px solid #B7F542;outline-offset:2px">{{ rawLabel }}</button>
+  </div>
+  <sc-if value="{{ showRaw }}" hint-placeholder-val="{{ false }}">
+    <pre style="background:#0E1015;border:1px solid #1E222B;border-radius:8px;padding:14px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9AA3B5;overflow:auto;max-height:360px;margin:0 0 14px">{{ rawJson }}</pre>
+  </sc-if>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px" role="group" aria-label="Filter by strategy">
+    <sc-for list="{{ stratChips }}" as="ch" hint-placeholder-count="4">
+      <button onClick="{{ ch.onClick }}" style="{{ ch.style }}" style-focus="outline:2px solid #B7F542;outline-offset:2px">{{ ch.label }}</button>
+    </sc-for>
+  </div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px" role="group" aria-label="Filter by status">
+    <sc-for list="{{ statusChips }}" as="ch" hint-placeholder-count="5">
+      <button onClick="{{ ch.onClick }}" style="{{ ch.style }}" style-focus="outline:2px solid #B7F542;outline-offset:2px">{{ ch.label }}</button>
+    </sc-for>
+  </div>
+  <div style="display:flex;gap:18px;flex-wrap:wrap;font-family:'IBM Plex Mono',monospace;font-size:12px;background:#0E1015;border:1px solid #1E222B;border-radius:8px;padding:10px 14px;margin-bottom:14px">
+    <span><span style="color:#6B7386">decisions </span>{{ aggCount }}</span>
+    <span><span style="color:#6B7386">settled </span>{{ aggSettled }}</span>
+    <span><span style="color:#6B7386">wins </span>{{ aggWins }}</span>
+    <span><span style="color:#6B7386">open </span>{{ aggOpen }}</span>
+    <span><span style="color:#6B7386">staked </span>{{ aggStaked }} USDC</span>
+    <span><span style="color:#6B7386">P&amp;L </span><span style="color:{{ aggPnlTone }}">{{ aggPnl }} USDC</span></span>
+  </div>
+  <div style="overflow-x:auto;border:1px solid #1E222B;border-radius:10px;background:#12141A">
+    <table style="width:100%;border-collapse:collapse;font-size:12.5px;min-width:940px">
+      <thead>
+        <tr style="text-align:left;color:#6B7386;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase">
+          <th style="padding:10px 14px;font-weight:600">Decided</th><th style="padding:10px 8px;font-weight:600">Strategy</th><th style="padding:10px 8px;font-weight:600">Fixture</th><th style="padding:10px 8px;font-weight:600">Market · outcome</th><th style="padding:10px 8px;font-weight:600;text-align:right">Edge</th><th style="padding:10px 8px;font-weight:600;text-align:right">Stake</th><th style="padding:10px 8px;font-weight:600;text-align:right">Price</th><th style="padding:10px 8px;font-weight:600">Status</th><th style="padding:10px 14px;font-weight:600;text-align:right">P&amp;L</th><th style="padding:10px 8px"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
+          <tr onClick="{{ r.onOpen }}" style="border-top:1px solid #1E222B;cursor:pointer" style-hover="background:#171A21">
+            <td style="padding:9px 14px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#9AA3B5;white-space:nowrap">{{ r.ago }}</td>
+            <td style="padding:9px 8px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:600;color:{{ r.stratColor }};white-space:nowrap">{{ r.strat }}</td>
+            <td style="padding:9px 8px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#9AA3B5;white-space:nowrap">{{ r.fixture }}</td>
+            <td style="padding:9px 8px;white-space:nowrap">{{ r.market }}</td>
+            <td style="padding:9px 8px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;text-align:right;white-space:nowrap">{{ r.edge }}</td>
+            <td style="padding:9px 8px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;text-align:right;white-space:nowrap">{{ r.stake }}</td>
+            <td style="padding:9px 8px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;text-align:right;white-space:nowrap">{{ r.price }}</td>
+            <td style="padding:9px 8px;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:{{ r.statusColor }};white-space:nowrap">{{ r.statusLabel }}</td>
+            <td style="padding:9px 14px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;text-align:right;font-weight:600;color:{{ r.pnlColor }};white-space:nowrap">{{ r.pnl }}</td>
+            <td style="padding:9px 8px"><button onClick="{{ r.onOpen }}" aria-label="Open decision detail" style="cursor:pointer;background:none;border:1px solid #2A3040;border-radius:5px;color:#9AA3B5;font-size:11px;padding:2px 8px;font-family:'IBM Plex Mono',monospace" style-hover="border-color:#B7F542;color:#E7EAF0" style-focus="outline:2px solid #B7F542;outline-offset:2px">open</button></td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+  </div>
+  <sc-if value="{{ noRows }}" hint-placeholder-val="{{ false }}">
+    <div style="text-align:center;color:#6B7386;padding:32px;font-size:13px">No records match this filter.</div>
+  </sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ isPerf }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Performance">
+  <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px">
+    <h1 style="margin:0;font-size:20px;font-weight:700">Performance digest</h1>
+    <div role="group" aria-label="Window" style="margin-left:auto;display:flex;gap:4px">
+      <button onClick="{{ setW7 }}" style="{{ w7Style }}" style-focus="outline:2px solid #B7F542;outline-offset:2px">7 days</button>
+      <button onClick="{{ setW30 }}" style="{{ w30Style }}" style-focus="outline:2px solid #B7F542;outline-offset:2px">30 days</button>
+    </div>
+  </div>
+  <div style="display:flex;gap:18px;flex-wrap:wrap;font-family:'IBM Plex Mono',monospace;font-size:12px;background:#0E1015;border:1px solid #1E222B;border-radius:8px;padding:10px 14px;margin-bottom:14px">
+    <span><span style="color:#6B7386">decisions </span>{{ ovDecisions }}</span>
+    <span><span style="color:#6B7386">settled </span>{{ ovSettled }}</span>
+    <span><span style="color:#6B7386">hit rate </span>{{ ovHit }}</span>
+    <span><span style="color:#6B7386">staked </span>{{ ovStaked }} USDC</span>
+    <span><span style="color:#6B7386">P&amp;L </span><span style="color:{{ ovPnlTone }}">{{ ovPnl }} USDC</span></span>
+    <span><span style="color:#6B7386">ROI </span><span style="color:{{ ovPnlTone }}">{{ ovRoi }}</span></span>
+  </div>
+  <div style="overflow-x:auto;border:1px solid #1E222B;border-radius:10px;background:#12141A;margin-bottom:16px">
+    <table style="width:100%;border-collapse:collapse;font-size:12.5px;min-width:900px">
+      <thead>
+        <tr style="text-align:left;color:#6B7386;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase">
+          <th style="padding:10px 14px;font-weight:600">Strategy</th><th style="padding:10px 8px;font-weight:600;text-align:right">n</th><th style="padding:10px 8px;font-weight:600;text-align:right">Wins</th><th style="padding:10px 8px;font-weight:600;text-align:right">Hit</th><th style="padding:10px 8px;font-weight:600;text-align:right">Staked</th><th style="padding:10px 8px;font-weight:600;text-align:right">P&amp;L</th><th style="padding:10px 8px;font-weight:600;text-align:right">ROI</th><th style="padding:10px 8px;font-weight:600;text-align:right"><span title="Mean squared error of predicted probabilities vs outcomes — lower is better">Brier ↓</span></th><th style="padding:10px 8px;font-weight:600;text-align:right">Mean edge</th><th style="padding:10px 14px;font-weight:600">Activity</th>
+        </tr>
+      </thead>
+      <tbody>
+        <sc-for list="{{ stratRows }}" as="r" hint-placeholder-count="3">
+          <tr onClick="{{ r.onClick }}" style="border-top:1px solid #1E222B;cursor:pointer" style-hover="background:#171A21">
+            <td style="padding:10px 14px;font-family:'IBM Plex Mono',monospace;font-weight:600;color:{{ r.color }};white-space:nowrap">{{ r.label }} <span style="color:#6B7386;font-weight:400;font-size:11px">{{ r.desc }}</span></td>
+            <td style="padding:10px 8px;font-family:'IBM Plex Mono',monospace;text-align:right">{{ r.n }}</td>
+            <td style="padding:10px 8px;font-family:'IBM Plex Mono',monospace;text-align:right">{{ r.wins }}</td>
+            <td style="padding:10px 8px;font-family:'IBM Plex Mono',monospace;text-align:right">{{ r.hit }}</td>
+            <td style="padding:10px 8px;font-family:'IBM Plex Mono',monospace;text-align:right">{{ r.staked }}</td>
+            <td style="padding:10px 8px;font-family:'IBM Plex Mono',monospace;text-align:right;font-weight:600;color:{{ r.pnlTone }}">{{ r.pnl }}</td>
+            <td style="padding:10px 8px;font-family:'IBM Plex Mono',monospace;text-align:right;color:{{ r.pnlTone }}">{{ r.roi }}</td>
+            <td style="padding:10px 8px;font-family:'IBM Plex Mono',monospace;text-align:right">{{ r.brier }}</td>
+            <td style="padding:10px 8px;font-family:'IBM Plex Mono',monospace;text-align:right">{{ r.meanEdge }}</td>
+            <td style="padding:10px 14px;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:{{ r.activityColor }};white-space:nowrap">{{ r.activity }}</td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+  </div>
+  <div style="display:grid;grid-template-columns:minmax(0,1.6fr) minmax(260px,1fr);gap:16px;align-items:start">
+    <section style="background:#12141A;border:1px solid #1E222B;border-radius:10px;padding:16px;min-width:0">
+      <h2 style="margin:0 0 12px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6B7386;font-weight:600">Daily P&amp;L (bucketed to decision day)</h2>
+      <div style="display:flex;align-items:flex-end;gap:10px;height:150px;overflow-x:auto;padding-bottom:4px">
+        <sc-for list="{{ days }}" as="d" hint-placeholder-count="4">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;min-width:56px">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:{{ d.tone }}">{{ d.pnlStr }}</span>
+            <div style="width:26px;height:{{ d.h }}px;background:{{ d.tone }};border-radius:3px;opacity:.85"></div>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#6B7386;white-space:nowrap">{{ d.day }}</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#6B7386">{{ d.count }} dec</span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+    <section style="background:#12141A;border:1px solid #1E222B;border-radius:10px;padding:16px">
+      <h2 style="margin:0 0 10px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6B7386;font-weight:600">SPRT suspension state</h2>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <sc-for list="{{ susp }}" as="s" hint-placeholder-count="3">
+          <div style="border-left:2px solid {{ s.color }};padding-left:10px">
+            <div style="display:flex;gap:8px;font-family:'IBM Plex Mono',monospace;font-size:12px"><span style="color:{{ s.color }};font-weight:600">{{ s.label }}</span><span style="color:{{ s.stateColor }};font-weight:600">{{ s.stateLabel }}</span></div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6B7386;margin-top:2px">{{ s.detail }}</div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="margin-top:12px;font-size:11.5px;color:#6B7386;line-height:1.5">A strategy whose real win rate falls below what its own probabilities promised is suspended to shadow-only (stake 0) until it re-qualifies. The agent benches itself before a human would.</div>
+    </section>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isDetail }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Decision detail">
+  <sc-if value="{{ detailFound }}" hint-placeholder-val="{{ true }}">
+    <button onClick="{{ goLedger }}" style="all:unset;cursor:pointer;color:#B7F542;font-size:12.5px;font-family:'IBM Plex Mono',monospace" style-hover="text-decoration:underline" style-focus="outline:2px solid #B7F542;outline-offset:2px">← track record</button>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:14px 0 6px">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:{{ d.stratColor }};border:1px solid {{ d.stratColor }};border-radius:5px;padding:2px 8px">{{ d.stratLabel }}</span>
+      <h1 style="margin:0;font-size:20px;font-weight:700">{{ d.title }}</h1>
+      <sc-if value="{{ d.isShadow }}" hint-placeholder-val="{{ false }}"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:#C9D2E3;background:#232833;border-radius:5px;padding:2px 8px">SHADOW · stake 0</span></sc-if>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6B7386;margin-left:auto">{{ d.abs }} · {{ d.ago }}</span>
+    </div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9AA3B5;margin-bottom:16px">
+      fixture <button onClick="{{ d.goFixture }}" style="all:unset;cursor:pointer;color:#B7F542" style-hover="text-decoration:underline" style-focus="outline:2px solid #B7F542;outline-offset:2px">{{ d.fixtureLabel }}</button> · {{ d.marketKey }} · mode {{ d.modeLabel }}
+    </div>
+    <blockquote style="margin:0 0 16px;background:#12141A;border:1px solid #1E222B;border-left:3px solid {{ d.stratColor }};border-radius:8px;padding:16px 18px;font-size:15.5px;line-height:1.6;color:#E7EAF0">
+      {{ d.reason }}
+      <div style="margin-top:8px;font-size:11px;color:#6B7386;font-family:'IBM Plex Mono',monospace">— written by the agent at decision time</div>
+    </blockquote>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:14px">
+      <section style="background:#12141A;border:1px solid #1E222B;border-radius:10px;padding:16px">
+        <h2 style="margin:0 0 12px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6B7386;font-weight:600">Why it acted — model vs market</h2>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;margin-bottom:4px;display:flex;justify-content:space-between"><span style="color:#9AA3B5">model probability</span><span style="font-weight:600">{{ d.modelPct }}</span></div>
+        <div style="height:8px;background:#0E1015;border-radius:4px;overflow:hidden;margin-bottom:10px"><div style="height:100%;width:{{ d.modelW }};background:#B7F542;border-radius:4px"></div></div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;margin-bottom:4px;display:flex;justify-content:space-between"><span style="color:#9AA3B5">market-implied</span><span style="font-weight:600">{{ d.marketPct }}</span></div>
+        <div style="height:8px;background:#0E1015;border-radius:4px;overflow:hidden;margin-bottom:12px"><div style="height:100%;width:{{ d.marketW }};background:#5A6375;border-radius:4px"></div></div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:14px">edge <span style="font-weight:700;color:#E7EAF0">{{ d.edgeStr }}</span> <span style="font-size:11px;color:#6B7386">(probability points, model − market)</span></div>
+      </section>
+      <section style="background:#12141A;border:1px solid #1E222B;border-radius:10px;padding:16px">
+        <h2 style="margin:0 0 12px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6B7386;font-weight:600">Position &amp; sizing internals</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-family:'IBM Plex Mono',monospace;font-size:12.5px">
+          <div><div style="color:#6B7386;font-size:10.5px">stake</div><div style="font-weight:600">{{ d.stakeStr }} USDC</div></div>
+          <div><div style="color:#6B7386;font-size:10.5px">decimal price</div><div style="font-weight:600">{{ d.priceStr }}</div></div>
+          <div><div style="color:#6B7386;font-size:10.5px">Kelly fraction</div><div>{{ d.kelly }}</div></div>
+          <div><div style="color:#6B7386;font-size:10.5px">calibration factor</div><div>{{ d.calF }}</div></div>
+          <div><div style="color:#6B7386;font-size:10.5px">allocation weight</div><div>{{ d.allocW }}</div></div>
+          <div><div style="color:#6B7386;font-size:10.5px">bankroll at decision</div><div>{{ d.bankroll }} USDC</div></div>
+        </div>
+      </section>
+      <section style="background:#12141A;border:1px solid #1E222B;border-radius:10px;padding:16px">
+        <h2 style="margin:0 0 12px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6B7386;font-weight:600">Input provenance</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-family:'IBM Plex Mono',monospace;font-size:12.5px">
+          <div><div style="color:#6B7386;font-size:10.5px">score seq</div><div>{{ d.inScoreSeq }}</div></div>
+          <div><div style="color:#6B7386;font-size:10.5px">score ts</div><div style="font-size:11px">{{ d.inScoreTs }}</div></div>
+          <div><div style="color:#6B7386;font-size:10.5px">odds message</div><div style="font-size:11px">{{ d.inOddsId }}</div></div>
+          <div><div style="color:#6B7386;font-size:10.5px">odds age at decision</div><div>{{ d.inOddsAge }}</div></div>
+          <div><div style="color:#6B7386;font-size:10.5px">λ home</div><div>{{ d.inLH }}</div></div>
+          <div><div style="color:#6B7386;font-size:10.5px">λ away</div><div>{{ d.inLA }}</div></div>
+        </div>
+        <div style="margin-top:10px;font-size:11.5px;color:#6B7386">Same inputs → same decision → same hash, bit-for-bit. Deterministic and recomputable.</div>
+      </section>
+    </div>
+
+    <section style="background:#12141A;border:1px solid #1E222B;border-radius:10px;padding:16px;margin-bottom:14px">
+      <h2 style="margin:0 0 12px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6B7386;font-weight:600">Verification — the evidence chain</h2>
+      <div style="display:flex;flex-direction:column;gap:10px;font-family:'IBM Plex Mono',monospace;font-size:12px">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="color:#6B7386;width:120px">record hash</span>
+          <span style="color:#C9D2E3;word-break:break-all;flex:1;min-width:200px">{{ d.hash }}</span>
+          <button onClick="{{ d.copyHash }}" style="cursor:pointer;background:#171A21;border:1px solid #2A3040;color:#C9D2E3;border-radius:5px;padding:3px 10px;font-family:inherit;font-size:11px" style-hover="border-color:#B7F542" style-focus="outline:2px solid #B7F542;outline-offset:2px">{{ d.copyHashLabel }}</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="color:#6B7386;width:120px">commitment</span>
+          <sc-if value="{{ d.hasCommit }}" hint-placeholder-val="{{ true }}">
+            <span style="color:#43D98A;font-weight:600">CONFIRMED ✓</span>
+            <span style="color:#C9D2E3">{{ d.commitShort }}</span>
+            <a href="{{ d.explorerUrl }}" target="_blank" rel="noopener noreferrer" style="font-size:11px">open on Solana Explorer (devnet) ↗</a>
+          </sc-if>
+          <sc-if value="{{ d.noCommit }}" hint-placeholder-val="{{ false }}">
+            <span style="color:#F5B84B;font-weight:600">PENDING…</span><span style="color:#6B7386">hash written to Solana within seconds — before the outcome exists</span>
+          </sc-if>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap">
+          <span style="color:#6B7386;width:120px">verify yourself</span>
+          <code style="background:#0E1015;border:1px solid #232833;border-radius:5px;padding:3px 10px;color:#9AA3B5;font-size:11px">npx tsx tools/verify-proof.ts</code>
+          <span style="color:#6B7386;font-size:11px">recomputes the hash and checks the Merkle proof against the on-chain root</span>
+        </div>
+      </div>
+    </section>
+
+    <sc-if value="{{ d.settled }}" hint-placeholder-val="{{ false }}">
+      <section style="background:#12141A;border:1px solid {{ d.sBorder }};border-radius:10px;padding:16px;margin-bottom:14px">
+        <h2 style="margin:0 0 12px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6B7386;font-weight:600">Settlement</h2>
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-family:'IBM Plex Mono',monospace">
+          <span style="font-size:16px;font-weight:700;color:{{ d.sWonColor }}">{{ d.sWonLabel }}</span>
+          <span style="font-size:16px;font-weight:700;color:{{ d.sPnlTone }}">{{ d.sPnl }} USDC</span>
+          <span style="font-size:12.5px;color:#9AA3B5">final score {{ d.sFinal }}</span>
+          <span style="font-size:12.5px;color:#6B7386">{{ d.sAbs }}</span>
+        </div>
+        <div style="margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-family:'IBM Plex Mono',monospace;font-size:12px">
+          <span style="color:{{ d.sVerifColor }};font-weight:600;border:1px solid {{ d.sVerifColor }};border-radius:5px;padding:2px 8px">{{ d.sVerifLabel }}</span>
+          <span style="color:#6B7386">{{ d.sVerifDetail }}</span>
+        </div>
+      </section>
+    </sc-if>
+    <sc-if value="{{ d.isOpen }}" hint-placeholder-val="{{ false }}">
+      <section style="background:#12141A;border:1px dashed #2A3040;border-radius:10px;padding:16px;margin-bottom:14px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:#F5B84B">POSITION OPEN</div>
+        <div style="font-size:12.5px;color:#9AA3B5;margin-top:4px">{{ d.openNote }}</div>
+      </section>
+    </sc-if>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button onClick="{{ d.goFixture }}" style="cursor:pointer;background:#171A21;border:1px solid #2A3040;color:#C9D2E3;border-radius:6px;padding:6px 14px;font-size:12.5px;font-family:inherit" style-hover="border-color:#B7F542" style-focus="outline:2px solid #B7F542;outline-offset:2px">Fixture story →</button>
+      <button onClick="{{ d.goStrategy }}" style="cursor:pointer;background:#171A21;border:1px solid #2A3040;color:#C9D2E3;border-radius:6px;padding:6px 14px;font-size:12.5px;font-family:inherit" style-hover="border-color:#B7F542" style-focus="outline:2px solid #B7F542;outline-offset:2px">{{ d.stratLabel }} history →</button>
+    </div>
+  </sc-if>
+  <sc-if value="{{ detailMissing }}" hint-placeholder-val="{{ false }}">
+    <div style="text-align:center;color:#6B7386;padding:60px 0">Decision not found. <button onClick="{{ goLedger }}" style="all:unset;cursor:pointer;color:#B7F542">Back to the ledger</button></div>
+  </sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ isFixture }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Fixture story">
+  <button onClick="{{ goLedger }}" style="all:unset;cursor:pointer;color:#B7F542;font-size:12.5px;font-family:'IBM Plex Mono',monospace" style-hover="text-decoration:underline" style-focus="outline:2px solid #B7F542;outline-offset:2px">← track record</button>
+  <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin:14px 0 4px">
+    <h1 style="margin:0;font-size:20px;font-weight:700">{{ fxTitle }}</h1>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:{{ fxScoreColor }}">{{ fxScore }}</span>
+  </div>
+  <div style="font-size:12.5px;color:#6B7386;margin-bottom:18px">{{ fxSub }}</div>
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:860px">
+    <sc-for list="{{ fxItems }}" as="e" hint-placeholder-count="5">
+      <button onClick="{{ e.onClick }}" style="text-align:left;cursor:pointer;background:#12141A;border:1px solid #1E222B;border-left:3px solid {{ e.accent }};border-radius:8px;padding:11px 14px;color:#E7EAF0;font-family:inherit;width:100%" style-hover="border-color:#3A4256;border-left-color:{{ e.accent }}" style-focus="outline:2px solid #B7F542;outline-offset:2px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.1em;color:{{ e.kindColor }};border:1px solid {{ e.kindColor }};border-radius:4px;padding:1px 6px">{{ e.kind }}</span>
+          <sc-if value="{{ e.strat }}" hint-placeholder-val="{{ false }}"><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;color:{{ e.stratColor }}">{{ e.strat }}</span></sc-if>
+          <span style="font-size:13px;font-weight:600">{{ e.title }}</span>
+          <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6B7386;white-space:nowrap">{{ e.abs }}</span>
+        </div>
+        <sc-if value="{{ e.showReason }}" hint-placeholder-val="{{ false }}"><div style="margin-top:6px;font-size:12.5px;color:#9AA3B5;line-height:1.45">{{ e.reason }}</div></sc-if>
+        <sc-if value="{{ e.hasChips }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:7px;display:flex;gap:6px;flex-wrap:wrap">
+            <sc-for list="{{ e.chips }}" as="c" hint-placeholder-count="2">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:{{ c.color }};background:#0E1015;border:1px solid #232833;border-radius:5px;padding:2px 8px;white-space:nowrap">{{ c.t }}</span>
+            </sc-for>
+          </div>
+        </sc-if>
+      </button>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isAbout }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="About" style="max-width:760px">
+  <h1 style="margin:0 0 6px;font-size:26px;font-weight:700;letter-spacing:-.01em">A track record that cannot be faked.</h1>
+  <p style="color:#9AA3B5;font-size:15px;line-height:1.65;margin:0 0 26px">SHARPE is an autonomous agent that trades football match outcomes in USDC — and publishes every decision, every loss, and every self-correction on a public, cryptographically anchored ledger.</p>
+
+  <h2 style="font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#B7F542;font-weight:600;margin:0 0 10px">The problem</h2>
+  <p style="color:#C9D2E3;line-height:1.7;margin:0 0 8px">Performance claims in trading are unfalsifiable. Tipsters cherry-pick screenshots; bots delete losing runs; "verified" records are hosted by whoever profits from them. One documented scam collected $3.7M in subscriptions on fabricated results. And even "decentralized" settlement still resolves through oracle committees, dispute windows, and admin keys — the referee is still a person.</p>
+
+  <h2 style="font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#B7F542;font-weight:600;margin:26px 0 10px">What SHARPE does differently</h2>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div style="background:#12141A;border:1px solid #1E222B;border-radius:10px;padding:16px">
+      <div style="font-weight:700;margin-bottom:4px"><span style="font-family:'IBM Plex Mono',monospace;color:#B7F542;margin-right:8px">01</span>Commits before outcomes — history can't be faked</div>
+      <div style="color:#9AA3B5;line-height:1.6;font-size:13.5px">Every decision's SHA-256 hash is written to Solana before the outcome exists. Nothing can be backdated, edited, or quietly deleted. The bad days are as permanent as the good ones.</div>
+    </div>
+    <div style="background:#12141A;border:1px solid #1E222B;border-radius:10px;padding:16px">
+      <div style="font-weight:700;margin-bottom:4px"><span style="font-family:'IBM Plex Mono',monospace;color:#B7F542;margin-right:8px">02</span>Settles by on-chain proof — results can't be faked</div>
+      <div style="color:#9AA3B5;line-height:1.6;font-size:13.5px">Every settlement submits a Merkle proof of the final match stats to TxLINE's validateStatV2 program on Solana, which checks it against the data root TxODDS anchored on-chain. If the proof doesn't verify, money does not move. No oracle committee, no dispute window, no human judgment.</div>
+    </div>
+    <div style="background:#12141A;border:1px solid #1E222B;border-radius:10px;padding:16px">
+      <div style="font-weight:700;margin-bottom:4px"><span style="font-family:'IBM Plex Mono',monospace;color:#B7F542;margin-right:8px">03</span>Learns from proven facts — and benches itself</div>
+      <div style="color:#9AA3B5;line-height:1.6;font-size:13.5px">The agent recalibrates only on verified settlements. When it detects its own edge decaying it shrinks every stake automatically; a strategy that underperforms its own promises is suspended to shadow mode until it re-qualifies. Decay can't hide.</div>
+    </div>
+  </div>
+
+  <h2 style="font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#B7F542;font-weight:600;margin:26px 0 10px">Check it yourself — three artifacts</h2>
+  <p style="color:#C9D2E3;line-height:1.7;margin:0 0 10px">Every claim links to its evidence: <strong>record hash</strong> (open any decision, copy its canonical hash) → <strong>commitment transaction</strong> (the same hash on Solana Explorer, timestamped before the match ended) → <strong>proof verification</strong> (the settlement's validateStatV2 check). Worked example: England 1–2 Argentina, fixture 18241006, seq 962 — a TRUE claim verifies, a FALSE claim is rejected. Reproduce it with <code style="font-family:'IBM Plex Mono',monospace;background:#0E1015;border:1px solid #232833;border-radius:5px;padding:2px 8px;font-size:12px">npx tsx tools/verify-proof.ts</code> in <code style="font-family:'IBM Plex Mono',monospace;font-size:12px">services/agent/</code>.</p>
+  <div style="background:#0E1015;border:1px solid #1E222B;border-radius:8px;padding:12px 14px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#9AA3B5;overflow-x:auto">
+    <div>TxLINE program (devnet): <span style="color:#C9D2E3">6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J</span></div>
+    <div style="margin-top:6px">subscription tx: <a href="https://explorer.solana.com/tx/XeNPJGSyBW9XUVXiPTqjsPMyWCBUgy3BwwNB1eRHn7bZiiviCejQLoMfFZMrgra94E5uk4PLcnBsZioeoax6Kxm?cluster=devnet" target="_blank" rel="noopener noreferrer">XeNPJGSyBW9X…6Kxm ↗</a></div>
+  </div>
+
+  <h2 style="font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#B7F542;font-weight:600;margin:26px 0 10px">How it thinks</h2>
+  <p style="color:#C9D2E3;line-height:1.7;margin:0 0 10px">SHARPE fits a joint model of each match and compares its probability for every outcome against the market's implied probability. When they disagree beyond a threshold — the <em>edge</em> — it acts, sizing with fractional Kelly scaled by its own calibration. Three deterministic strategies:</p>
+  <ul style="color:#9AA3B5;line-height:1.8;margin:0 0 0 4px;padding-left:18px;font-size:13.5px">
+    <li><strong style="color:#7DA7FF">S1 COHERENCE</strong> — trades markets that disagree with the jointly-fitted model: pure cross-market arithmetic.</li>
+    <li><strong style="color:#F5B84B">S2 REACTION</strong> — after a goal or red card, trades quotes that lag the repricing.</li>
+    <li><strong style="color:#C792EA">S3 CONVERGENCE</strong> — fades quotes that drifted from consensus without any match event.</li>
+  </ul>
+
+  <h2 style="font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#B7F542;font-weight:600;margin:26px 0 10px">Honest limits</h2>
+  <p style="color:#C9D2E3;line-height:1.7;margin:0">This runs on Solana devnet, in paper execution unless stated otherwise. Win rates hover near 50% by construction — the claim is provable honesty and positive expected value, never "it always wins." Replay mode pushes recorded real matches through the identical pipeline: same code, same decisions. It IS the agent, on recorded input.</p>
+</div>
+</sc-if>
+
+<sc-if value="{{ isSystem }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="System" style="max-width:760px">
+  <h1 style="margin:0 0 16px;font-size:20px;font-weight:700">System</h1>
+  <section style="background:#12141A;border:1px solid #1E222B;border-radius:10px;padding:16px;margin-bottom:14px">
+    <h2 style="margin:0 0 10px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6B7386;font-weight:600">Health — GET /health</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;font-family:'IBM Plex Mono',monospace;font-size:12.5px">
+      <div><div style="color:#6B7386;font-size:10.5px">ok</div><div style="color:#43D98A;font-weight:600">{{ sysOk }}</div></div>
+      <div><div style="color:#6B7386;font-size:10.5px">phase</div><div>{{ sysPhase }}</div></div>
+      <div><div style="color:#6B7386;font-size:10.5px">uptime</div><div>{{ sysUptime }}</div></div>
+      <div><div style="color:#6B7386;font-size:10.5px">now (UTC)</div><div style="font-size:11px">{{ sysNow }}</div></div>
+    </div>
+    <div style="margin-top:10px;font-size:11.5px;color:#6B7386">On restart the agent rebuilds its complete state from its ledger — equity, calibration, allocations, and open positions all survive. This page reconnects and rehydrates automatically; the uptime reset is the only tell.</div>
+  </section>
+  <section style="background:#12141A;border:1px solid #1E222B;border-radius:10px;padding:16px;margin-bottom:14px">
+    <h2 style="margin:0 0 10px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6B7386;font-weight:600">Stream</h2>
+    <div style="display:flex;align-items:center;gap:8px;font-family:'IBM Plex Mono',monospace;font-size:12.5px"><span style="width:8px;height:8px;border-radius:50%;background:{{ connColor }}"></span>{{ connLabel }} · SSE /stream · last event {{ lastEventAgo }}</div>
+    <div style="margin-top:8px;font-size:11.5px;color:#6B7386">On disconnect the browser retries with Last-Event-ID; up to 500 missed events replay exactly once. Persistent failure falls back to polling /status.</div>
+  </section>
+  <section style="background:#12141A;border:1px solid #1E222B;border-radius:10px;padding:16px;margin-bottom:14px">
+    <h2 style="margin:0 0 10px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6B7386;font-weight:600">Public read-only API — no auth, CORS *</h2>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9AA3B5;display:flex;flex-direction:column;gap:5px">
+      <span>GET /health · /status · /decisions · /positions · /settlements · /reviews · /digest?days=30 · /track-record · /stream (SSE)</span>
+    </div>
+    <div style="margin-top:8px;font-size:11.5px;color:#6B7386">Public and unauthenticated on purpose: radical transparency is the product. There are no write operations anywhere.</div>
+  </section>
+  <div style="font-size:12px;color:#6B7386;line-height:1.6">Feedback: <a href="https://github.com/Ritik200238/sharpe/issues" target="_blank" rel="noopener noreferrer">github.com/Ritik200238/sharpe/issues ↗</a></div>
+</div>
+</sc-if>
+
+</main>
+<footer style="border-top:1px solid #1E222B;padding:20px;margin-top:20px">
+  <div style="max-width:1400px;margin:0 auto;display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:11.5px;color:#6B7386">
+    <span style="max-width:640px;line-height:1.5">SHARPE is a technology demonstration on Solana devnet using TxLINE data. Nothing here is gambling services or financial advice.</span>
+    <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace">data by TxLINE / TxODDS · settlement on Solana · <a href="https://github.com/Ritik200238/sharpe" target="_blank" rel="noopener noreferrer">repo ↗</a></span>
+  </div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;simSpeed&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:0.25,&quot;max&quot;:4,&quot;step&quot;:0.25,&quot;unit&quot;:&quot;×&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Simulation&quot;},&quot;execMode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;paper&quot;,&quot;options&quot;:[&quot;paper&quot;,&quot;chain&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Simulation&quot;},&quot;feedDensity&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;comfortable&quot;,&quot;options&quot;:[&quot;comfortable&quot;,&quot;compact&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Display&quot;}}">
+class Component extends DCLogic {
+  state = { route:{name:'command',params:{}}, filters:{strategy:'all',status:'all'}, windowDays:30, paused:false, copied:'', showRaw:false, announce:'' };
+
+  // ---------- utils ----------
+  rng(seed){ let s=7; for(const ch of seed) s=(s*31+ch.charCodeAt(0))>>>0; return ()=>{ s=(s*1664525+1013904223)>>>0; return s/4294967296; }; }
+  hex(seed){ const r=this.rng('h'+seed); let o=''; for(let i=0;i<64;i++) o+='0123456789abcdef'[Math.floor(r()*16)]; return o; }
+  sig(seed){ const r=this.rng('s'+seed); const a='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'; let o=''; for(let i=0;i<87;i++) o+=a[Math.floor(r()*a.length)]; return o; }
+  usd(n){ return n.toFixed(2); }
+  pnlStr(n){ return (n>=0?'+':'-')+Math.abs(n).toFixed(2); }
+  pct(p){ return (p*100).toFixed(1)+'%'; }
+  pp(e){ return (e>=0?'+':'-')+Math.abs(e*100).toFixed(1)+'pp'; }
+  ago(ts){ const s=Math.max(0,Math.round((Date.now()-ts)/1000)); if(s<5)return 'just now'; if(s<60)return s+'s ago'; const m=Math.floor(s/60); if(m<60)return m+'m ago'; const h=Math.floor(m/60); if(h<48)return h+'h ago'; return Math.floor(h/24)+'d ago'; }
+  abs(ts){ return new Date(ts).toISOString().replace('T',' ').slice(0,19)+' UTC'; }
+  dur(sec){ const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60); return h>0?h+'h '+m+'m':m+'m '+Math.floor(sec%60)+'s'; }
+  short(s){ return s? s.slice(0,10)+'…'+s.slice(-4) : ''; }
+  explorer(sig){ return 'https://explorer.solana.com/tx/'+sig+'?cluster=devnet'; }
+  SC = {S1_COHERENCE:'#7DA7FF',S2_REACTION:'#F5B84B',S3_CONVERGENCE:'#C792EA'};
+  SL(id){ return id.replace('_',' '); }
+  GREEN='#43D98A'; RED='#FF7A76'; LIME='#B7F542'; MUT='#9AA3B5'; DIM='#6B7386';
+  famLabel(d){ if(d.family==='TOTAL_GOALS') return (d.outcomeName.toUpperCase())+' '+d.line+' goals'; if(d.family==='BOTH_TEAMS_SCORE') return 'both teams score: '+d.outcomeName.toUpperCase(); const f=this.fixtures[d.fixtureId]; const nm=d.outcomeName==='part1'?('P'+f.p1+' win'):d.outcomeName==='part2'?('P'+f.p2+' win'):'DRAW'; return 'match result: '+nm; }
+  fixLabel(id){ const f=this.fixtures[id]; return id+' · P'+f.p1+' vs P'+f.p2; }
+
+  // ---------- seed ----------
+  ensureSeed(){ if(this.decisions) return; const now=Date.now(); this.mountTs=now;
+    this.startedAtTs=now-8141e3;
+    this.eventsSeen={score:1042,odds:18211,heartbeat:320};
+    this.lastEventTs=now-2100;
+    this.allocations={S1_COHERENCE:0.376,S2_REACTION:0.312,S3_CONVERGENCE:0.312};
+    this.calibration={samples:12,modelBrier:0.213,marketBrier:0.243,advantage:0.030,factor:1.06};
+    this.suspensions={S1_COHERENCE:{llr:0.41,suspended:false,shadowWins:0,suspensions:0},S2_REACTION:{llr:-0.62,suspended:false,shadowWins:0,suspensions:0},S3_CONVERGENCE:{llr:-2.31,suspended:true,shadowWins:2,suspensions:1}};
+    this.realized=1996.90; this.peak=2016.72; this.escrow=0;
+    this.fixtures={18241006:{p1:1888,p2:1489,f1:1,f2:2,done:true}};
+    this.decisions=new Map(); this.settlements=new Map(); this.reviews=[]; this.vetoList=[]; this.feedRaw=[]; this.buffer=[]; this.timers=[]; this.evc=0;
+    this.liveFixtures=0; this.trackedMarkets=3; this.phase='replaying'; this.cycle=0;
+    const T=now-2*86400e3, FX=18241006;
+    const mk=(i,st,fam,mkey,line,oi,on,mp,qp,stake,price,reason,tmin,stale,kelly)=>{
+      const ts=T+tmin*60000;
+      const d={hash:this.hex('A'+i),decidedAtTs:ts,mode:'paper',strategy:st,fixtureId:FX,marketKey:mkey,family:fam,line,outcomeIndex:oi,outcomeName:on,modelProb:mp,marketProb:qp,edge:+(mp-qp).toFixed(3),stakeUsdc:stake,priceDecimal:price,reason,
+        sizing:{kellyFraction:kelly,calibrationFactor:1.06,allocationWeight:this.allocations[st],bankrollUsdc:2000},
+        inputs:{scoreSeq:2+i,scoreTs:ts-2000,oddsMessageId:'m-'+this.hex('o'+i).slice(0,12),oddsTs:ts-stale*1000,lambdaHome:1.18,lambdaAway:1.16},
+        commitTxSig:this.sig('A'+i)};
+      this.decisions.set(d.hash,d); return d; };
+    const ds=[
+      mk(1,'S1_COHERENCE','WIN_DRAW_WIN','WIN_DRAW_WIN',null,0,'part1',0.410,0.340,22.6,2.9412,'Cross-market coherence: jointly-fitted model prices P1888 win at 41.0%, WIN_DRAW_WIN quote implies 34.0% — 7.0pp mispricing while TOTAL_GOALS and BTTS stay consistent. λH 1.18, λA 1.16.',12,41,0.028),
+      mk(2,'S2_REACTION','TOTAL_GOALS','OVERUNDER_PARTICIPANT_GOALS||line=2.5',2.5,0,'over',0.715,0.533,50,1.8763,'Goal at seq 2 repriced this match; quote is 298s older than the event. Model now 71.5% for OVER, stale quote implies 53.3%, edge +18.2pp.',52,298,0.031),
+      mk(3,'S3_CONVERGENCE','WIN_DRAW_WIN','WIN_DRAW_WIN',null,1,'draw',0.305,0.278,31,3.5971,'Quote drifted 6.1% from consensus mid with no match event in 214s; fading the drift. Model 30.5% for DRAW, drifted quote implies 27.8%.',34,214,0.019),
+      mk(4,'S1_COHERENCE','BOTH_TEAMS_SCORE','BOTH_TEAMS_SCORE',null,0,'yes',0.550,0.476,18.4,2.1000,'BTTS quote inconsistent with jointly-fitted goal rates: model 55.0% for YES vs implied 47.6% — 7.4pp gap with WIN_DRAW_WIN coherent.',41,63,0.024),
+      mk(5,'S2_REACTION','WIN_DRAW_WIN','WIN_DRAW_WIN',null,2,'part2',0.560,0.513,20,1.9500,'Goal at seq 4 repriced this match; quote is 121s older than the event. Model now 56.0% for P1489, stale quote implies 51.3%, edge +4.7pp.',58,121,0.021),
+      mk(6,'S3_CONVERGENCE','TOTAL_GOALS','OVERUNDER_PARTICIPANT_GOALS||line=3.5',3.5,0,'over',0.340,0.294,26.1,3.4014,'Totals quote drifted from consensus without a match event; model 34.0% for OVER 3.5 vs implied 29.4%.',63,187,0.017),
+      mk(7,'S2_REACTION','BOTH_TEAMS_SCORE','BOTH_TEAMS_SCORE',null,1,'no',0.520,0.460,23.5,2.1739,'Red card at seq 6 repriced scoring rates; quote is 176s older than the event. Model 52.0% for NO, stale quote implies 46.0%.',71,176,0.023),
+      mk(8,'S1_COHERENCE','TOTAL_GOALS','OVERUNDER_PARTICIPANT_GOALS||line=2.5',2.5,0,'over',0.520,0.468,15,2.1360,'Late coherence gap: totals quote implies 46.8% for OVER 2.5, joint model holds 52.0% with result markets consistent.',83,52,0.015)];
+    const results=[[false,-22.6],[true,43.82],[false,-31],[true,20.24],[true,19.00],[false,-26.1],[false,-23.5],[true,17.04]];
+    const setT=T+105*60000;
+    ds.forEach((d,i)=>{ const [won,pnl]=results[i];
+      const s={decisionHash:d.hash,settledAtTs:setT+i*400,fixtureId:FX,won,pnlUsdc:pnl,finalP1Goals:1,finalP2Goals:2};
+      if(i!==5) s.verification={method:'validateStatV2',verified:true,statKeys:[1,2],seq:962,txSigOrView:'view'};
+      this.settlements.set(d.hash,s); });
+    this.reviews.push({hash:this.hex('revA'),fixtureId:FX,generatedAtTs:setT+4000,decisions:8,wins:4,losses:4,stakedUsdc:206.6,pnlUsdc:-3.1,meanModelProb:0.490,realizedHitRate:0.5,
+      notes:['Predictions and outcomes consistent this match (mean model 49.0% vs realized 50.0%).','S3_CONVERGENCE: 2 decisions, 0 wins, -57.10 USDC — SPRT threshold crossed; strategy suspended to shadow mode.']});
+    // seed feed with the tail of that match
+    const seedEvents=[];
+    ds.forEach((d)=>{ const s=this.settlements.get(d.hash); seedEvents.push({type:'settlement',ts:s.settledAtTs,data:s}); });
+    seedEvents.push({type:'review',ts:setT+4000,data:this.reviews[0]});
+    seedEvents.push({type:'status',ts:now-3600e3,data:{text:'TxLINE replay stream connected — recorded World Cup corpus (20 fixtures)'}});
+    seedEvents.sort((a,b)=>a.ts-b.ts).forEach(e=>{ e.id='seed'+(this.evc++); this.feedRaw.unshift(e); });
+    this.vetoList.push({reason:'quote stale (312s old)',strategy:'S2_REACTION',marketKey:'WIN_DRAW_WIN',ts:now-2900e3});
+    this.vetoList.push({reason:'per-fixture exposure cap reached (120 USDC)',strategy:'S1_COHERENCE',marketKey:'OVERUNDER_PARTICIPANT_GOALS||line=2.5',ts:now-1400e3});
+  }
+
+  // ---------- live sim ----------
+  speed(){ return this.props.simSpeed ?? 1; }
+  sched(sec,fn){ this.timers.push(setTimeout(()=>{ try{fn();}catch(e){} },sec*1000/this.speed())); }
+  push(type,data){ const e={type,ts:Date.now(),data,id:'e'+(this.evc++)}; this.lastEventTs=e.ts;
+    if(this.state.paused){ this.buffer.unshift(e); } else { this.feedRaw.unshift(e); if(this.feedRaw.length>120)this.feedRaw.length=120; }
+    this.pend=(this.pend||0)+1;
+    if(!this.annT){ this.annT=setTimeout(()=>{ const n=this.pend; this.pend=0; this.annT=null; this.setState({announce:n+' new event'+(n>1?'s':'')+' in the agent feed'}); },4000); }
+    this.forceUpdate(); }
+  addDecision(d){ this.decisions.set(d.hash,d); if(d.stakeUsdc>0) this.escrow+=d.stakeUsdc; this.push('decision',d); }
+  settle(d,won,seq){ const stake=d.stakeUsdc; const pnl=stake===0?0:(won? +(stake*(d.priceDecimal-1)).toFixed(2) : -stake);
+    const f=this.fixtures[d.fixtureId];
+    const s={decisionHash:d.hash,settledAtTs:Date.now(),fixtureId:d.fixtureId,won,pnlUsdc:pnl,finalP1Goals:f.f1,finalP2Goals:f.f2,verification:{method:'validateStatV2',verified:true,statKeys:[1,2],seq,txSigOrView:'view'}};
+    if((this.props.execMode??'paper')==='chain') s.commitTxSig=this.sig('sc'+d.hash);
+    this.settlements.set(d.hash,s);
+    if(stake>0){ this.escrow-=stake; this.realized=+(this.realized+pnl).toFixed(2); if(this.realized>this.peak)this.peak=this.realized; }
+    this.push('settlement',s); return s; }
+  veto(strategy,reason,marketKey){ const v={reason,strategy,marketKey,ts:Date.now()}; this.vetoList.push(v); if(this.vetoList.length>20)this.vetoList.shift(); this.push('veto',v); }
+
+  runCycle(){ const fixDefs=[{id:18241012,p1:1772,p2:1905},{id:18241019,p1:1610,p2:1834},{id:18241021,p1:1955,p2:1703},{id:18241030,p1:1466,p2:1727}];
+    const c=this.cycle, fd=fixDefs[c%fixDefs.length], win=(c%2===1);
+    const fid=fd.id+c*100000; // unique per cycle
+    this.fixtures[fid]={p1:fd.p1,p2:fd.p2,f1:win?2:1,f2:win?1:2,done:false,live:true};
+    const mkD=(i,st,fam,mkey,line,oi,on,mp,qp,stake,price,reason,stale,kelly)=>({hash:this.hex('C'+c+'-'+i),decidedAtTs:Date.now(),mode:'paper',strategy:st,fixtureId:fid,marketKey:mkey,family:fam,line,outcomeIndex:oi,outcomeName:on,modelProb:mp,marketProb:qp,edge:+(mp-qp).toFixed(3),stakeUsdc:stake,priceDecimal:price,reason,
+      sizing:{kellyFraction:kelly,calibrationFactor:this.calibration.factor,allocationWeight:this.allocations[st],bankrollUsdc:+this.realized.toFixed(2)},
+      inputs:{scoreSeq:3+i,scoreTs:Date.now()-1500,oddsMessageId:'m-'+this.hex('lo'+c+i).slice(0,12),oddsTs:Date.now()-stale*1000,lambdaHome:1.22,lambdaAway:1.09}});
+    let L1,L2,L3,L4;
+    this.sched(1,()=>{ this.liveFixtures=1; this.trackedMarkets=14; this.phase='replaying'; this.push('status',{text:'TxLINE replay connected — fixture '+fid+' (P'+fd.p1+' v P'+fd.p2+') · recorded stream through the live pipeline'}); });
+    this.sched(8,()=>this.veto('S2_REACTION','quote stale (214s old)','WIN_DRAW_WIN'));
+    this.sched(16,()=>{ this.eventsSeen.score++; this.push('score',{text:'GOAL — P'+fd.p1+' 1–0 (seq 3)',fixtureId:fid}); });
+    this.sched(16.5,()=>{ L1=mkD(1,'S2_REACTION','WIN_DRAW_WIN','WIN_DRAW_WIN',null,0,'part1',0.580,0.440,41.20,2.2727,'Goal at seq 3 repriced this match; quote is 187s older than the event. Model now 58.0% for P'+fd.p1+', stale quote implies 44.0%, edge +14.0pp.',187,0.033); this.addDecision(L1); });
+    this.sched(17.2,()=>{ L2=mkD(2,'S1_COHERENCE','TOTAL_GOALS','OVERUNDER_PARTICIPANT_GOALS||line=2.5',2.5,0,'over',0.550,0.470,24.80,2.1277,'Totals quote now incoherent with result markets after the opener: joint model 55.0% for OVER 2.5, quote implies 47.0%.',44,0.026); this.addDecision(L2); });
+    this.sched(18,()=>{ const s3=this.suspensions.S3_CONVERGENCE; const shadow=s3.suspended; L3=mkD(3,'S3_CONVERGENCE','BOTH_TEAMS_SCORE','BOTH_TEAMS_SCORE',null,0,'yes',0.570,0.505,shadow?0:22.40,1.9800,'BTTS quote drifted 5.2% from consensus with no further match event; fading the drift. Model 57.0% for YES.'+(shadow?' Shadow decision — strategy under SPRT suspension, stake 0.':''),96,0.020); this.addDecision(L3); });
+    this.sched(22,()=>{ [L1,L2,L3].forEach((d,i)=>{ if(d){ d.commitTxSig=this.sig('lc'+c+i); } }); this.push('status',{text:'commitments confirmed on Solana — 3 decision hashes anchored before outcome'}); });
+    this.sched(38,()=>this.veto('S1_COHERENCE','stake below minimum (0.42 USDC after calibration scaling)','WIN_DRAW_WIN'));
+    this.sched(56,()=>{ this.eventsSeen.score++; this.push('score',{text:'GOAL — P'+fd.p1+' 1–1 P'+fd.p2+' (seq 5)',fixtureId:fid}); });
+    this.sched(57,()=>{ L4=mkD(4,'S2_REACTION','TOTAL_GOALS','OVERUNDER_PARTICIPANT_GOALS||line=3.5',3.5,0,'over',0.360,0.320,18.60,3.1250,'Equaliser at seq 5; totals quote is 142s older than the event. Model 36.0% for OVER 3.5, stale quote implies 32.0%.',142,0.014); this.addDecision(L4); });
+    this.sched(60,()=>{ if(L4){ L4.commitTxSig=this.sig('lc'+c+'4'); this.forceUpdate(); } });
+    this.sched(82,()=>{ this.eventsSeen.score++; const f=this.fixtures[fid]; this.push('score',{text:'GOAL — final-shaping: P'+fd.p1+' '+f.f1+'–'+f.f2+' P'+fd.p2+' (seq 8)',fixtureId:fid}); });
+    this.sched(100,()=>{ this.push('status',{text:'match finalised — P'+fd.p1+' '+this.fixtures[fid].f1+'–'+this.fixtures[fid].f2+' P'+fd.p2+' · submitting Merkle proofs (validateStatV2)'}); this.fixtures[fid].done=true; });
+    this.sched(103,()=>{ if(L1) this.settle(L1,win,900+c*40); });
+    this.sched(104.2,()=>{ if(L2) this.settle(L2,true,901+c*40); });
+    this.sched(105.4,()=>{ if(L4) this.settle(L4,false,902+c*40); });
+    this.sched(106.6,()=>{ if(!L3) return; this.settle(L3,true,903+c*40); const s3=this.suspensions.S3_CONVERGENCE;
+      if(s3.suspended){ s3.shadowWins++; if(s3.shadowWins>=4){ s3.suspended=false; s3.llr=0.12; this.push('status',{text:'S3_CONVERGENCE re-qualified after '+s3.shadowWins+' shadow wins — restored to live sizing'}); } } });
+    this.sched(110,()=>{ const real=[L1,L2,L4].filter(Boolean); const wins=real.filter(d=>this.settlements.get(d.hash).won).length; const pnl=real.reduce((a,d)=>a+this.settlements.get(d.hash).pnlUsdc,0); const staked=real.reduce((a,d)=>a+d.stakeUsdc,0);
+      const s3=this.suspensions.S3_CONVERGENCE;
+      const rv={hash:this.hex('rev'+c),fixtureId:fid,generatedAtTs:Date.now(),decisions:real.length,wins,losses:real.length-wins,stakedUsdc:+staked.toFixed(2),pnlUsdc:+pnl.toFixed(2),meanModelProb:0.497,realizedHitRate:+(wins/real.length).toFixed(2),
+        notes:[ win?'Model read the favourite correctly after the opener; sizing appropriate.':'Model slightly overconfident on P'+fd.p1+' after the opener (58.0% predicted; outcome lost).',
+          s3.suspended?('S3_CONVERGENCE shadow: won again — '+s3.shadowWins+' of 4 wins toward re-qualification.'):'S3_CONVERGENCE trading live again after shadow re-qualification.']};
+      this.reviews.push(rv); this.push('review',rv);
+      this.calibration.samples+=real.length; this.calibration.factor=+(Math.min(1.25,Math.max(0.9,this.calibration.factor+(win?0.01:-0.02)))).toFixed(2); this.calibration.advantage=+(this.calibration.factor>1?0.03:0.018).toFixed(3);
+      const A=this.allocations; const shift=win?0.02:-0.02; A.S2_REACTION=+(Math.min(.5,Math.max(.2,A.S2_REACTION+shift))).toFixed(3); const rest=1-A.S2_REACTION; A.S1_COHERENCE=+(rest*0.55).toFixed(3); A.S3_CONVERGENCE=+(rest-A.S1_COHERENCE).toFixed(3); });
+    this.sched(115,()=>{ this.liveFixtures=0; this.trackedMarkets=3; this.fixtures[fid].live=false; this.push('status',{text:'replay complete — cooling down · next recorded fixture queued'}); });
+    this.sched(128,()=>{ this.cycle++; this.runCycle(); });
+  }
+
+  componentDidMount(){ this.ensureSeed();
+    this.oddsIv=setInterval(()=>{ this.eventsSeen.odds+=1+Math.floor(Math.random()*3); if(Math.random()<.2)this.eventsSeen.heartbeat++; this.lastEventTs=Date.now(); },2500);
+    this.tickIv=setInterval(()=>this.forceUpdate(),4000);
+    this.runCycle(); }
+  componentWillUnmount(){ clearInterval(this.oddsIv); clearInterval(this.tickIv); if(this.annT)clearTimeout(this.annT); (this.timers||[]).forEach(clearTimeout); }
+
+  // ---------- navigation ----------
+  go(name,params){ this.setState({route:{name,params:params||{}}}); try{window.scrollTo(0,0);}catch(e){} }
+  copy(key,text){ try{navigator.clipboard.writeText(text);}catch(e){} this.setState({copied:key}); setTimeout(()=>this.setState({copied:''}),1600); }
+
+  // ---------- vm builders ----------
+  chip(t,color){ return {t,color:color||this.MUT}; }
+  feedVm(e){ const t=e.type; const vm={key:e.id,ago:this.ago(e.ts),abs:this.abs(e.ts),chips:[],strat:'',stratColor:'#fff',showReason:false,reason:''};
+    const dens=this.props.feedDensity??'comfortable';
+    if(t==='decision'){ const d=e.data; const shadow=d.stakeUsdc===0;
+      vm.kind=shadow?'SHADOW':'DECISION'; vm.kindColor=shadow?'#8A93A5':this.LIME; vm.accent=this.SC[d.strategy];
+      vm.strat=this.SL(d.strategy); vm.stratColor=this.SC[d.strategy];
+      vm.title=this.famLabel(d)+' · fixture '+d.fixtureId;
+      vm.reason=d.reason; vm.showReason=dens!=='compact';
+      vm.chips=[this.chip('edge '+this.pp(d.edge),'#E7EAF0'),this.chip(shadow?'stake 0 (shadow)':('stake '+this.usd(d.stakeUsdc)+' USDC')),this.chip('@ '+d.priceDecimal.toFixed(4)),
+        d.commitTxSig?this.chip('committed ✓',this.GREEN):this.chip('commit pending…','#F5B84B')];
+      vm.onClick=()=>this.go('detail',{hash:d.hash});
+    } else if(t==='settlement'){ const s=e.data; const d=this.decisions.get(s.decisionHash);
+      vm.kind='SETTLEMENT'; vm.kindColor=s.won?this.GREEN:this.RED; vm.accent=s.won?this.GREEN:this.RED;
+      if(d){ vm.strat=this.SL(d.strategy); vm.stratColor=this.SC[d.strategy]; vm.title=(s.won?'WON ':'LOST ')+(d.stakeUsdc===0?'(shadow) ':'')+this.famLabel(d)+' · fixture '+s.fixtureId; } else vm.title=(s.won?'WON':'LOST')+' · fixture '+s.fixtureId;
+      vm.chips=[this.chip((d&&d.stakeUsdc===0)?'P&L 0.00 (shadow)':('P&L '+this.pnlStr(s.pnlUsdc)+' USDC'),s.won?this.GREEN:this.RED),this.chip('final '+s.finalP1Goals+'–'+s.finalP2Goals),
+        s.verification?(s.verification.verified?this.chip('VERIFIED ✓ on-chain proof',this.GREEN):this.chip('PROOF FAILED — position stays open, retrying',this.RED)):this.chip('paper settle — no validator','#F5B84B')];
+      vm.onClick=()=>this.go('detail',{hash:s.decisionHash});
+    } else if(t==='review'){ const r=e.data; vm.kind='REVIEW'; vm.kindColor='#C792EA'; vm.accent='#C792EA';
+      vm.title='post-match self-review · fixture '+r.fixtureId;
+      vm.reason=(r.notes||[]).join(' '); vm.showReason=true;
+      vm.chips=[this.chip(r.decisions+' decisions'),this.chip(r.wins+'W/'+r.losses+'L'),this.chip('P&L '+this.pnlStr(r.pnlUsdc)+' USDC',r.pnlUsdc>=0?this.GREEN:this.RED),this.chip('hit '+this.pct(r.realizedHitRate))];
+      vm.onClick=()=>this.go('fixture',{id:r.fixtureId});
+    } else if(t==='veto'){ const v=e.data; vm.kind='VETO'; vm.kindColor='#8A93A5'; vm.accent='#2A3040';
+      vm.strat=this.SL(v.strategy); vm.stratColor=this.SC[v.strategy];
+      vm.title='trade refused'; vm.reason='Risk gate: '+v.reason+' — '+v.marketKey; vm.showReason=true;
+      vm.onClick=()=>this.go('ledger');
+    } else if(t==='score'){ vm.kind='MATCH'; vm.kindColor='#E7EAF0'; vm.accent='#E7EAF0'; vm.title=e.data.text;
+      vm.onClick=()=>e.data.fixtureId?this.go('fixture',{id:e.data.fixtureId}):this.go('system');
+    } else { vm.kind='STATUS'; vm.kindColor='#6B7386'; vm.accent='#2A3040'; vm.title=e.data.text; vm.onClick=()=>this.go('system'); }
+    vm.hasChips=vm.chips.length>0; return vm; }
+
+  digest(days){ const cut=Date.now()-days*86400e3; const decs=[...this.decisions.values()].filter(d=>d.decidedAtTs>=cut&&d.stakeUsdc>0);
+    const by={}; ['S1_COHERENCE','S2_REACTION','S3_CONVERGENCE'].forEach(k=>by[k]={strategy:k,n:0,wins:0,staked:0,pnl:0,settled:0,briSum:0,edgeSum:0,last:0});
+    let dayMap={};
+    decs.forEach(d=>{ const g=by[d.strategy]; g.n++; g.staked+=d.stakeUsdc; g.edgeSum+=d.edge; g.last=Math.max(g.last,d.decidedAtTs);
+      const day=new Date(d.decidedAtTs).toISOString().slice(0,10); dayMap[day]=dayMap[day]||{day,decisions:0,settled:0,pnl:0}; dayMap[day].decisions++;
+      const s=this.settlements.get(d.hash); if(s){ g.settled++; if(s.won)g.wins++; g.pnl+=s.pnlUsdc; g.briSum+=Math.pow(d.modelProb-(s.won?1:0),2); dayMap[day].settled++; dayMap[day].pnl+=s.pnlUsdc; } });
+    const strategies=Object.values(by).map(g=>({strategy:g.strategy,n:g.n,wins:g.wins,hitRate:g.settled?g.wins/g.settled:null,stakedUsdc:+g.staked.toFixed(2),pnlUsdc:+g.pnl.toFixed(2),roi:g.staked?g.pnl/g.staked:null,brier:g.settled?g.briSum/g.settled:null,meanEdge:g.n?g.edgeSum/g.n:null,lastDecisionTs:g.last,
+      activity:g.last===0?'stale':(Date.now()-g.last<7*86400e3?'active':(Date.now()-g.last<21*86400e3?'quiet':'stale'))}));
+    const all=strategies.reduce((a,s)=>({n:a.n+s.n,wins:a.wins+s.wins,staked:a.staked+s.stakedUsdc,pnl:a.pnl+s.pnlUsdc,settled:a.settled+(s.hitRate!==null?Math.round(s.wins/(s.hitRate||1)):0)}),{n:0,wins:0,staked:0,pnl:0,settled:0});
+    const settledTotal=decs.filter(d=>this.settlements.has(d.hash)).length;
+    return {strategies,overall:{decisions:all.n,settled:settledTotal,wins:all.wins,stakedUsdc:+all.staked.toFixed(2),pnlUsdc:+all.pnl.toFixed(2),roi:all.staked?all.pnl/all.staked:null,hitRate:settledTotal?all.wins/settledTotal:null},days:Object.values(dayMap).sort((a,b)=>a.day<b.day?-1:1)}; }
+
+  renderVals(){ this.ensureSeed();
+    const st=this.state, r=st.route, now=Date.now();
+    const decs=[...this.decisions.values()];
+    const real=decs.filter(d=>d.stakeUsdc>0);
+    const open=real.filter(d=>!this.settlements.has(d.hash));
+    const settledN=real.filter(d=>this.settlements.has(d.hash)).length;
+    const wins=real.filter(d=>{const s=this.settlements.get(d.hash);return s&&s.won;}).length;
+    const totPnl=real.reduce((a,d)=>{const s=this.settlements.get(d.hash);return a+(s?s.pnlUsdc:0);},0);
+    const equity=this.realized-this.escrow;
+    const navDefs=[['Command','command'],['Ledger','ledger'],['Performance','perf'],['About','about'],['System','system']];
+    const navBase='cursor:pointer;background:none;border:none;font-family:inherit;font-size:13px;padding:6px 12px;border-radius:6px;';
+    const nav=navDefs.map(([label,name])=>({label,onClick:()=>this.go(name),style:navBase+((r.name===name||(name==='ledger'&&(r.name==='detail'||r.name==='fixture')))?'color:#E7EAF0;background:#1E222B;font-weight:600':'color:#9AA3B5;font-weight:500')}));
+    const dig=this.digest(st.windowDays);
+    const digestSummary=st.windowDays+'d: '+dig.overall.decisions+' decisions, '+dig.overall.settled+' settled, '+dig.overall.wins+'W/'+(dig.overall.settled-dig.overall.wins)+'L, pnl '+this.pnlStr(dig.overall.pnlUsdc)+' USDC | flags: '+dig.strategies.filter(s=>s.activity!=='active').map(s=>s.strategy+':'+s.activity).join(', ')+(dig.strategies.every(s=>s.activity==='active')?'none':'')+(this.suspensions.S3_CONVERGENCE.suspended?' | S3_CONVERGENCE:suspended':'');
+    // feed
+    const feed=this.feedRaw.slice(0,30).map(e=>this.feedVm(e));
+    // filters
+    const f=st.filters;
+    const mkChip=(label,active,onClick)=>({label,onClick,style:'cursor:pointer;font-family:IBM Plex Mono,monospace;font-size:11px;padding:4px 12px;border-radius:14px;border:1px solid '+(active?'#B7F542;color:#B7F542;background:rgba(183,245,66,.08)':'#2A3040;color:#9AA3B5;background:#12141A')});
+    const stratChips=[['all','ALL'],['S1_COHERENCE','S1 COHERENCE'],['S2_REACTION','S2 REACTION'],['S3_CONVERGENCE','S3 CONVERGENCE']].map(([v,l])=>mkChip(l,f.strategy===v,()=>this.setState({filters:{...f,strategy:v}})));
+    const statusChips=[['all','ALL'],['open','OPEN'],['settled','SETTLED'],['won','WON'],['lost','LOST'],['shadow','SHADOW']].map(([v,l])=>mkChip(l,f.status===v,()=>this.setState({filters:{...f,status:v}})));
+    let rowsSrc=decs.slice().sort((a,b)=>b.decidedAtTs-a.decidedAtTs);
+    if(f.strategy!=='all') rowsSrc=rowsSrc.filter(d=>d.strategy===f.strategy);
+    rowsSrc=rowsSrc.filter(d=>{ const s=this.settlements.get(d.hash); const shadow=d.stakeUsdc===0;
+      if(f.status==='open')return !s&&!shadow; if(f.status==='settled')return !!s&&!shadow; if(f.status==='won')return s&&s.won&&!shadow; if(f.status==='lost')return s&&!s.won&&!shadow; if(f.status==='shadow')return shadow; return true; });
+    const rows=rowsSrc.slice(0,80).map(d=>{ const s=this.settlements.get(d.hash); const shadow=d.stakeUsdc===0;
+      return {ago:this.ago(d.decidedAtTs),strat:this.SL(d.strategy),stratColor:this.SC[d.strategy],fixture:''+d.fixtureId,market:this.famLabel(d),edge:this.pp(d.edge),stake:shadow?'0 (shadow)':this.usd(d.stakeUsdc),price:d.priceDecimal.toFixed(4),
+        statusLabel:s?(shadow?'SHADOW · '+(s.won?'W':'L'):(s.won?'WON':'LOST')):(shadow?'SHADOW · OPEN':'OPEN'),statusColor:s?(shadow?'#8A93A5':(s.won?this.GREEN:this.RED)):'#F5B84B',
+        pnl:s?(shadow?'0.00':this.pnlStr(s.pnlUsdc)):'—',pnlColor:s&&!shadow?(s.won?this.GREEN:this.RED):'#6B7386',onOpen:()=>this.go('detail',{hash:d.hash})}; });
+    const fAgg=rowsSrc.reduce((a,d)=>{ const s=this.settlements.get(d.hash); a.staked+=d.stakeUsdc; if(s){a.settled++; if(s.won)a.wins++; a.pnl+=s.pnlUsdc;} else if(d.stakeUsdc>0)a.open++; return a; },{staked:0,settled:0,wins:0,pnl:0,open:0});
+    // digest rows
+    const descs={S1_COHERENCE:'cross-market arithmetic',S2_REACTION:'trades lagging quotes after events',S3_CONVERGENCE:'fades no-event drift'};
+    const stratRows=dig.strategies.map(s=>({label:this.SL(s.strategy),color:this.SC[s.strategy],desc:descs[s.strategy],n:''+s.n,wins:''+s.wins,hit:s.hitRate===null?'—':this.pct(s.hitRate),staked:this.usd(s.stakedUsdc),pnl:this.pnlStr(s.pnlUsdc),pnlTone:s.pnlUsdc>=0?this.GREEN:this.RED,roi:s.roi===null?'—':this.pnlStr(s.roi*100).replace(/(\d)$/,'$1')+'%',brier:s.brier===null?'—':s.brier.toFixed(4),meanEdge:s.meanEdge===null?'—':this.pp(s.meanEdge),
+      activity:(this.suspensions[s.strategy].suspended?'SUSPENDED · ':'')+s.activity.toUpperCase(),activityColor:this.suspensions[s.strategy].suspended?this.RED:(s.activity==='active'?this.GREEN:'#F5B84B'),
+      onClick:()=>{ this.setState({filters:{strategy:s.strategy,status:'all'}}); this.go('ledger'); }}));
+    const maxAbs=Math.max(1,...dig.days.map(d=>Math.abs(d.pnl)));
+    const days=dig.days.slice(-12).map(d=>({day:d.day.slice(5),count:''+d.decisions,pnlStr:this.pnlStr(d.pnl),tone:d.pnl>=0?this.GREEN:this.RED,h:Math.round(Math.abs(d.pnl)/maxAbs*80)+6}));
+    const susp=Object.entries(this.suspensions).map(([k,v])=>({label:k.slice(0,2),color:this.SC[k],stateLabel:v.suspended?'SUSPENDED — shadow only':'LIVE',stateColor:v.suspended?this.RED:this.GREEN,detail:'llr '+v.llr.toFixed(2)+' · shadow wins '+v.shadowWins+' · suspensions '+v.suspensions}));
+    const alloc=Object.entries(this.allocations).map(([k,v])=>({label:this.SL(k),color:this.SC[k],pctStr:this.pct(v),width:(v*100).toFixed(1)+'%',note:this.suspensions[k].suspended?'suspended — shadow only, stake 0':''}));
+    const vetoes=this.vetoList.slice(-5).reverse().map(v=>({reason:v.reason+' — '+v.marketKey,strat:this.SL(v.strategy),color:this.SC[v.strategy],ago:this.ago(v.ts)}));
+    // detail
+    let d=null, detailFound=false;
+    if(r.name==='detail'){ const rec=this.decisions.get(r.params.hash);
+      if(rec){ detailFound=true; const s=this.settlements.get(rec.hash); const shadow=rec.stakeUsdc===0; const fx=this.fixtures[rec.fixtureId];
+        d={stratLabel:this.SL(rec.strategy),stratColor:this.SC[rec.strategy],title:this.famLabel(rec),isShadow:shadow,abs:this.abs(rec.decidedAtTs),ago:this.ago(rec.decidedAtTs),
+          fixtureLabel:this.fixLabel(rec.fixtureId),marketKey:rec.marketKey,modeLabel:rec.mode,reason:rec.reason,
+          modelPct:this.pct(rec.modelProb),marketPct:this.pct(rec.marketProb),modelW:(rec.modelProb*100).toFixed(1)+'%',marketW:(rec.marketProb*100).toFixed(1)+'%',edgeStr:this.pp(rec.edge),
+          stakeStr:this.usd(rec.stakeUsdc),priceStr:rec.priceDecimal.toFixed(4),kelly:rec.sizing.kellyFraction.toFixed(3),calF:'×'+rec.sizing.calibrationFactor.toFixed(2),allocW:this.pct(rec.sizing.allocationWeight),bankroll:this.usd(rec.sizing.bankrollUsdc),
+          inScoreSeq:''+rec.inputs.scoreSeq,inScoreTs:this.abs(rec.inputs.scoreTs),inOddsId:rec.inputs.oddsMessageId,inOddsAge:Math.round((rec.decidedAtTs-rec.inputs.oddsTs)/1000)+'s',inLH:rec.inputs.lambdaHome.toFixed(2),inLA:rec.inputs.lambdaAway.toFixed(2),
+          hash:rec.hash,copyHashLabel:st.copied==='hash'?'copied ✓':'copy',copyHash:()=>this.copy('hash',rec.hash),
+          hasCommit:!!rec.commitTxSig,noCommit:!rec.commitTxSig,commitShort:this.short(rec.commitTxSig||''),explorerUrl:rec.commitTxSig?this.explorer(rec.commitTxSig):'#',
+          settled:!!s,isOpen:!s,openNote:'Stake '+(shadow?'0 (shadow)':this.usd(rec.stakeUsdc)+' USDC')+' escrowed until the match finalises and its Merkle proof verifies on-chain. If a proof fails, the position stays open and retries — money never moves on unverified data.',
+          goFixture:()=>this.go('fixture',{id:rec.fixtureId}),goStrategy:()=>{ this.setState({filters:{strategy:rec.strategy,status:'all'}}); this.go('ledger'); }};
+        if(s){ d.sWonLabel=shadow?(s.won?'SHADOW WIN':'SHADOW LOSS'):(s.won?'WON':'LOST'); d.sWonColor=s.won?this.GREEN:this.RED; d.sBorder=s.won?'rgba(67,217,138,.4)':'rgba(255,122,118,.4)';
+          d.sPnl=shadow?'0.00':this.pnlStr(s.pnlUsdc); d.sPnlTone=shadow?'#8A93A5':(s.won?this.GREEN:this.RED); d.sFinal=s.finalP1Goals+'–'+s.finalP2Goals+' (P'+fx.p1+'–P'+fx.p2+')'; d.sAbs=this.abs(s.settledAtTs);
+          if(s.verification){ d.sVerifLabel=s.verification.verified?'VERIFIED ✓':'PROOF FAILED — RETRYING'; d.sVerifColor=s.verification.verified?this.GREEN:this.RED; d.sVerifDetail=s.verification.method+' · statKeys ['+s.verification.statKeys.join(', ')+'] · seq '+s.verification.seq+' — outcome checked against the data root TxODDS anchored on Solana'; }
+          else { d.sVerifLabel='PAPER SETTLE'; d.sVerifColor='#F5B84B'; d.sVerifDetail='settled without an on-chain validator — honest, lesser guarantee'; } } } }
+    // fixture story
+    let fxTitle='',fxSub='',fxScore='',fxScoreColor='#E7EAF0',fxItems=[];
+    if(r.name==='fixture'&&this.fixtures[r.params.id]){ const id=r.params.id,fx=this.fixtures[id];
+      fxTitle='Fixture '+id; fxSub='P'+fx.p1+' vs P'+fx.p2+' · participant ids as delivered by the feed — name mapping may come later · everything the agent did on this match, in order';
+      fxScore=fx.done?('final '+fx.f1+'–'+fx.f2):(fx.live?'IN PLAY':'awaiting'); fxScoreColor=fx.done?'#E7EAF0':this.LIME;
+      const items=[];
+      decs.filter(x=>x.fixtureId===id).forEach(x=>{ items.push({type:'decision',ts:x.decidedAtTs,data:x,id:'fd'+x.hash}); const s=this.settlements.get(x.hash); if(s)items.push({type:'settlement',ts:s.settledAtTs,data:s,id:'fs'+x.hash}); });
+      this.reviews.filter(x=>x.fixtureId===id).forEach(x=>items.push({type:'review',ts:x.generatedAtTs,data:x,id:'fr'+x.hash}));
+      items.sort((a,b)=>a.ts-b.ts); fxItems=items.map(e=>this.feedVm(e)); }
+    const connLabel='LIVE STREAM', connColor=this.LIME;
+    const w=(active)=>'cursor:pointer;font-family:IBM Plex Mono,monospace;font-size:11px;padding:5px 14px;border-radius:6px;border:1px solid '+(active?'#B7F542;color:#B7F542;background:rgba(183,245,66,.08)':'#2A3040;color:#9AA3B5;background:#12141A');
+    return {
+      announce:st.announce,
+      nav, goCommand:()=>this.go('command'), goLedger:()=>this.go('ledger'), goPerf:()=>this.go('perf'), goAbout:()=>this.go('about'), goSystem:()=>this.go('system'),
+      isCommand:r.name==='command', isLedger:r.name==='ledger', isPerf:r.name==='perf', isAbout:r.name==='about', isSystem:r.name==='system', isDetail:r.name==='detail', isFixture:r.name==='fixture',
+      netLabel:'devnet', feedLabel:'replay', execLabel:this.props.execMode??'paper', connColor, connLabel, 
+      realizedStr:this.usd(this.realized), realizedTone:this.realized>=2000?this.GREEN:this.RED, realizedDelta:this.pnlStr(this.realized-2000)+' all-time', peakStr:this.usd(this.peak),
+      equityStr:this.usd(equity), escrowNote:this.usd(this.escrow)+' USDC escrowed in open positions',
+      openCount:''+open.length, openNote:open.length?'view in ledger →':'none — nothing worth trading',
+      pnlAggStr:this.pnlStr(totPnl), pnlAggTone:totPnl>=0?this.GREEN:this.RED, pnlAggNote:settledN+' settled · '+wins+'W/'+(settledN-wins)+'L',
+      calFactorStr:'×'+this.calibration.factor.toFixed(2), calNote:this.calibration.factor<1?'edge decaying — auto-shrinking every stake':'model beating market — full sizing',
+      digestSummary, goOpenLedger:()=>{ this.setState({filters:{strategy:'all',status:'open'}}); this.go('ledger'); },
+      feed, pauseLabel:st.paused?'Resume':'Pause', pausedNote:st.paused?(this.buffer.length+' events buffered — data still flowing'):'',
+      togglePause:()=>{ if(st.paused){ this.feedRaw=[...this.buffer,...this.feedRaw].slice(0,120); this.buffer=[]; } this.setState({paused:!st.paused}); },
+      lastEventAgo:this.ago(this.lastEventTs), liveFixtures:''+this.liveFixtures, trackedMarkets:''+this.trackedMarkets,
+      evOdds:this.eventsSeen.odds.toLocaleString('en-US'), evScore:this.eventsSeen.score.toLocaleString('en-US'), evHb:this.eventsSeen.heartbeat.toLocaleString('en-US'),
+      alloc, susp, vetoes,
+      calSamples:''+this.calibration.samples, calModelBrier:this.calibration.modelBrier.toFixed(3), calMarketBrier:this.calibration.marketBrier.toFixed(3), calAdvantage:'+'+this.calibration.advantage.toFixed(3),
+      calMeaning:'Rolling Brier comparison over settled decisions (lower is better). Factor ×'+this.calibration.factor.toFixed(2)+' scales every stake — below ×1.00 means the agent detected its own edge decaying and is shrinking automatically.',
+      stratChips, statusChips, rows, noRows:rows.length===0,
+      aggCount:''+rowsSrc.length, aggSettled:''+fAgg.settled, aggWins:''+fAgg.wins, aggOpen:''+fAgg.open, aggStaked:this.usd(fAgg.staked), aggPnl:this.pnlStr(fAgg.pnl), aggPnlTone:fAgg.pnl>=0?this.GREEN:this.RED,
+      toggleRaw:()=>this.setState({showRaw:!st.showRaw}), rawLabel:st.showRaw?'hide raw JSON':'raw export · GET /track-record', showRaw:st.showRaw,
+      rawJson:st.showRaw?JSON.stringify({aggregates:{decisions:real.length,settled:settledN,wins,stakedUsdc:+real.reduce((a,x)=>a+x.stakeUsdc,0).toFixed(2),pnlUsdc:+totPnl.toFixed(2),openPositions:open.length},decisions:decs.slice(0,25),settlements:[...this.settlements.values()].slice(0,25),reviews:this.reviews},null,2):'',
+      setW7:()=>this.setState({windowDays:7}), setW30:()=>this.setState({windowDays:30}), w7Style:w(st.windowDays===7), w30Style:w(st.windowDays===30),
+      ovDecisions:''+dig.overall.decisions, ovSettled:''+dig.overall.settled, ovHit:dig.overall.hitRate===null?'—':this.pct(dig.overall.hitRate), ovStaked:this.usd(dig.overall.stakedUsdc), ovPnl:this.pnlStr(dig.overall.pnlUsdc), ovPnlTone:dig.overall.pnlUsdc>=0?this.GREEN:this.RED, ovRoi:dig.overall.roi===null?'—':(dig.overall.roi>=0?'+':'-')+Math.abs(dig.overall.roi*100).toFixed(1)+'%',
+      stratRows, days,
+      detailFound, detailMissing:r.name==='detail'&&!detailFound, d:d||{},
+      fxTitle, fxSub, fxScore, fxScoreColor, fxItems,
+      sysOk:'true', sysPhase:this.phase, sysUptime:this.dur(Math.round((now-this.startedAtTs)/1000)), sysNow:new Date(now).toISOString(),
+    };
+  }
+}
+</script>
+</body>
+</html>

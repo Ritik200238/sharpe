@@ -4,10 +4,12 @@
   "version": "0.1.0",
   "description": "The autonomous sports trading agent with an unfakeable public track record.",
   "workspaces": [
-    "services/*"
+    "services/*",
+    "apps/*"
   ],
   "scripts": {
-    "recorder": "npm run --workspace services/recorder"
+    "recorder": "npm run --workspace services/recorder",
+    "web": "npm run dev --workspace apps/web"
   },
   "engines": {
     "node": ">=20"

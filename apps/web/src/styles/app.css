@@ -1,0 +1,488 @@
+/* Shared chrome and components — translated 1:1 from the prototype markup. */
+
+/* ---------- header ---------- */
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(11, 12, 15, 0.92);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+}
+
+.header-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 20px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.wordmark {
+  all: unset;
+  cursor: pointer;
+  display: flex;
+  align-items: baseline;
+}
+
+.wordmark:focus-visible {
+  outline: 2px solid var(--lime);
+  outline-offset: 3px;
+}
+
+.wordmark-text {
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: 0.08em;
+}
+
+.wordmark-block {
+  display: inline-block;
+  width: 8px;
+  height: 14px;
+  background: var(--lime);
+  margin-left: 3px;
+  transform: translateY(1px);
+}
+
+.primary-nav {
+  display: flex;
+  gap: 2px;
+}
+
+.nav-btn {
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.nav-btn.active {
+  color: var(--text);
+  background: var(--border);
+  font-weight: 600;
+}
+
+.header-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  border: 1px solid var(--border-strong);
+  border-radius: 5px;
+  padding: 2px 8px;
+}
+
+.conn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--mid);
+}
+
+.conn-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: pulse 2.2s infinite;
+}
+
+/* ---------- layout ---------- */
+
+.main {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+}
+
+.narrow {
+  max-width: 760px;
+}
+
+.dead-banner {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--red);
+  background: var(--panel);
+  border: 1px solid rgba(255, 122, 118, 0.4);
+  border-radius: 8px;
+  padding: 8px 14px;
+  margin-bottom: 14px;
+}
+
+/* ---------- footer ---------- */
+
+.site-footer {
+  border-top: 1px solid var(--border);
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.footer-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+  font-size: 11.5px;
+  color: var(--faint);
+}
+
+.footer-disclaimer {
+  max-width: 640px;
+  line-height: 1.5;
+}
+
+.footer-credit {
+  margin-left: auto;
+  font-family: var(--font-mono);
+}
+
+/* ---------- panels & labels ---------- */
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.panel-label {
+  margin: 0 0 10px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--faint);
+  font-weight: 600;
+}
+
+.panel-label.mb12 {
+  margin-bottom: 12px;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.page-subtitle {
+  font-size: 12.5px;
+  color: var(--faint);
+}
+
+/* ---------- buttons & chips ---------- */
+
+.btn {
+  cursor: pointer;
+  background: var(--panel-hover);
+  border: 1px solid var(--border-strong);
+  color: var(--mid);
+  border-radius: 6px;
+  font-family: inherit;
+}
+
+.btn:hover {
+  border-color: var(--lime);
+}
+
+.btn-mono {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 4px 12px;
+}
+
+.btn-mono:hover {
+  color: var(--text);
+}
+
+.btn-mono-lg {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 5px 12px;
+}
+
+.btn-body {
+  font-size: 12.5px;
+  padding: 6px 14px;
+}
+
+.link-btn {
+  all: unset;
+  cursor: pointer;
+  color: var(--lime);
+}
+
+.link-btn:hover {
+  text-decoration: underline;
+}
+
+.link-btn:focus-visible {
+  outline: 2px solid var(--lime);
+  outline-offset: 2px;
+}
+
+.back-link {
+  font-size: 12.5px;
+  font-family: var(--font-mono);
+}
+
+.chip {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: var(--inset);
+  border: 1px solid var(--chip-border);
+  border-radius: 5px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+.filter-chip {
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 4px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border-strong);
+  color: var(--muted);
+  background: var(--panel);
+}
+
+.filter-chip.active {
+  border-color: var(--lime);
+  color: var(--lime);
+  background: var(--lime-active-bg);
+}
+
+.window-btn {
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 5px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--border-strong);
+  color: var(--muted);
+  background: var(--panel);
+}
+
+.window-btn.active {
+  border-color: var(--lime);
+  color: var(--lime);
+  background: var(--lime-active-bg);
+}
+
+.kind-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  padding: 1px 6px;
+  opacity: 0.95;
+}
+
+.strat-tag {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.copy-btn {
+  cursor: pointer;
+  background: var(--panel-hover);
+  border: 1px solid var(--border-strong);
+  color: var(--mid);
+  border-radius: 5px;
+  padding: 3px 10px;
+  font-family: inherit;
+  font-size: 11px;
+}
+
+.copy-btn:hover {
+  border-color: var(--lime);
+}
+
+.code-chip {
+  font-family: var(--font-mono);
+  background: var(--inset);
+  border: 1px solid var(--chip-border);
+  border-radius: 5px;
+  padding: 3px 10px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+/* ---------- feed cards ---------- */
+
+.feed-card {
+  text-align: left;
+  cursor: pointer;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-left-width: 3px;
+  border-left-style: solid;
+  border-radius: 8px;
+  padding: 11px 14px;
+  color: var(--text);
+  font-family: inherit;
+  width: 100%;
+}
+
+.feed-card:hover {
+  border-top-color: var(--border-hover);
+  border-right-color: var(--border-hover);
+  border-bottom-color: var(--border-hover);
+}
+
+.feed-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.feed-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 0;
+}
+
+.feed-card-time {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--faint);
+  white-space: nowrap;
+}
+
+.feed-card-reason {
+  margin-top: 6px;
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.feed-card-chips {
+  margin-top: 7px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* ---------- inset & aggregate bars ---------- */
+
+.inset-bar {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--shadow-gray);
+  background: var(--inset);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 14px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.agg-bar {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: var(--inset);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.agg-bar .k {
+  color: var(--faint);
+}
+
+/* ---------- tables (scroll inside container only) ---------- */
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.data-table thead tr {
+  text-align: left;
+  color: var(--faint);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.data-table th {
+  padding: 10px 8px;
+  font-weight: 600;
+}
+
+.data-table th:first-child,
+.data-table td:first-child {
+  padding-left: 14px;
+  padding-right: 14px;
+}
+
+.data-table th.num,
+.data-table td.num {
+  text-align: right;
+}
+
+.data-table tbody tr {
+  border-top: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.data-table tbody tr:hover {
+  background: var(--panel-hover);
+}
+
+.raw-pre {
+  background: var(--inset);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  overflow: auto;
+  max-height: 360px;
+  margin: 0 0 14px;
+}
+
+.empty-note {
+  text-align: center;
+  color: var(--faint);
+  padding: 32px;
+  font-size: 13px;
+}

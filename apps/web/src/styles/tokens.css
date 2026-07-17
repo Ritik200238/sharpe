@@ -1,0 +1,99 @@
+/* SHARPE design tokens — final values from the design handoff. */
+:root {
+  --bg: #0b0c0f;
+  --panel: #12141a;
+  --inset: #0e1015;
+  --panel-hover: #171a21;
+  --border: #1e222b;
+  --border-strong: #2a3040;
+  --border-hover: #3a4256;
+  --chip-border: #232833;
+  --text: #e7eaf0;
+  --muted: #9aa3b5;
+  --faint: #6b7386;
+  --mid: #c9d2e3;
+  --shadow-gray: #8a93a5;
+  --lime: #b7f542;
+  --lime-hover: #d3ff7a;
+  --green: #43d98a;
+  --red: #ff7a76;
+  --amber: #f5b84b;
+  --s1: #7da7ff;
+  --s2: #f5b84b;
+  --s3: #c792ea;
+  --lime-active-bg: rgba(183, 245, 66, 0.08);
+  --font-sans: "Space Grotesk", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+}
+
+body {
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+a {
+  color: var(--lime);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--lime-hover);
+  text-decoration: underline;
+}
+
+::selection {
+  background: rgba(183, 245, 66, 0.25);
+}
+
+button {
+  font-family: inherit;
+}
+
+/* Visible lime focus ring on everything interactive. */
+a:focus-visible,
+button:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--lime);
+  outline-offset: 2px;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Screen-reader-only live region. */
+.sr-only {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
