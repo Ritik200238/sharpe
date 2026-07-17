@@ -1,0 +1,35 @@
+# SHARPE agent + recorder — the always-on half. (Frontend deploys to Vercel.)
+#   docker compose up -d --build
+# One-time TxLINE signup after first boot (funds the devnet wallet):
+#   docker compose exec agent tsx services/recorder/src/cli.ts setup
+# Named volumes keep the ledger + credentials across restarts/redeploys.
+
+services:
+  agent:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8787:8787"
+    environment:
+      - TX_NETWORK=devnet
+      - API_PORT=8787
+    volumes:
+      - keys:/app/_keys
+      - data:/app/data
+    command: ["tsx", "services/agent/src/main.ts", "--network", "devnet", "--mode", "live", "--exec", "paper", "--port", "8787"]
+
+  recorder:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      - agent
+    environment:
+      - TX_NETWORK=devnet
+    volumes:
+      - keys:/app/_keys
+      - data:/app/data
+    command: ["tsx", "services/recorder/src/bootstrap.ts"]
+
+volumes:
+  keys:
+  data:
