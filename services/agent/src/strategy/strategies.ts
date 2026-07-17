@@ -9,9 +9,9 @@ import { DecisionIntent, StrategyId } from "./types";
  * small cross-market incoherences are usually the market knowing something
  * the two-market λ fit doesn't. */
 export const THRESHOLDS: Record<StrategyId, number> = {
-  S1_COHERENCE: 0.055,
+  S1_COHERENCE: 0.065,
   S2_REACTION: 0.04,
-  S3_CONVERGENCE: 0.025,
+  S3_CONVERGENCE: 0.045,
 };
 
 /** S1 only trades when the λ solver reconciled its inputs this tightly. */
