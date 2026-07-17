@@ -216,13 +216,16 @@ Our devnet subscription is itself on-chain: [`XeNPJG…x6Kxm`](https://explorer.
 | **Innovation & novelty** | commit-before-outcome + proof-gated settlement + an agent that statistically audits **itself** — a track record that cannot be faked |
 | **Production readiness** | write-ahead commitment journal, boot reconcile, self-healing feeds, exposure caps, drawdown breakers, live 24/7 on devnet |
 
-**Submission checklist:** public repo ✔ · working devnet build ✔ · TxLINE as primary data source ✔ · technical docs ([PLAN.md](PLAN.md), this README) ✔ · demo video — in production · deployed judge endpoint — deployment phase.
+**Submission package:** the full requirement-by-requirement status, `judge.md` + `CLAUDE.md`
+compliance audit, and API feedback live in **[SUBMISSION.md](SUBMISSION.md)**. The turnkey
+5-minute demo-video script is in **[DEMOVIDEO.md](DEMOVIDEO.md)**; deployment (Vercel
+frontend + Dockerized agent) in **[docs/DEPLOY.md](docs/DEPLOY.md)**.
 
 ---
 
 ## Roadmap
 
-- **On-chain escrow markets + vault** (Anchor programs; toolchain verified) — USDC positions held in PDAs, settlement CPIs into `validateStatV2`, payouts released by proof
+- **On-chain escrow markets + vault** ([Anchor design + honest toolchain status](programs/README.md)) — USDC positions held in PDAs, settlement CPIs into `validateStatV2`, payouts released by proof
 - **The agent's bankroll** — non-custodial deposits riding the agent's provable performance
 - **Third-party strategists** — anyone deploys a strategy; every strategy inherits the same unfakeable accountability
 - Mainnet, audits, and the venue-agnostic execution layer
