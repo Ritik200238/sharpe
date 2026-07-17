@@ -54,9 +54,11 @@ The chain accepted the truth and rejected the lie. That single mechanic is the e
 
 <div align="center">
 
-<img src="docs/assets/dashboard-live.jpg" alt="SHARPE production frontend — the agent live on devnet" width="92%"/>
+<img src="docs/assets/demo.gif" alt="SHARPE — the production frontend replaying the England 1-2 Argentina semifinal, settlements verified on-chain" width="92%"/>
 
-*The production frontend, live on devnet — a real decision with its reasoning, live vitals, and the agent's self-regulation, all streamed over SSE.*
+<img src="docs/assets/dashboard-live.jpg" alt="SHARPE production frontend — real semifinal settled, each outcome verified on-chain via validateStatV2" width="92%"/>
+
+*The production frontend replaying the real England 1–2 Argentina semifinal — every settlement carries **VERIFIED ✓ on-chain proof** (checked against TxODDS' Merkle root via `validateStatV2`, seq 962), wins and losses shown alike. Nothing here is faked; all of it is checkable.*
 
 </div>
 
