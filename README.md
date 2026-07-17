@@ -54,9 +54,9 @@ The chain accepted the truth and rejected the lie. That single mechanic is the e
 
 <div align="center">
 
-<img src="docs/assets/dashboard-live.jpg" alt="SHARPE live dashboard — the agent trading a live match on devnet" width="92%"/>
+<img src="docs/assets/dashboard-live.jpg" alt="SHARPE production frontend — the agent live on devnet" width="92%"/>
 
-*The dashboard mid-session — SHARPE live on devnet, pricing a real match as it plays.*
+*The production frontend, live on devnet — a real decision with its reasoning, live vitals, and the agent's self-regulation, all streamed over SSE.*
 
 </div>
 
