@@ -4,12 +4,23 @@ import { SoccerPhase } from "../feed/types";
 import { StrategyContext } from "./context";
 import { DecisionIntent, StrategyId } from "./types";
 
-/** Entry thresholds (edge in probability points) per strategy. */
+/** Entry thresholds (edge in probability points) per strategy.
+ * S1's threshold was raised from 3pp after the 20-match real-data backtest:
+ * small cross-market incoherences are usually the market knowing something
+ * the two-market λ fit doesn't. */
 export const THRESHOLDS: Record<StrategyId, number> = {
-  S1_COHERENCE: 0.03,
+  S1_COHERENCE: 0.055,
   S2_REACTION: 0.04,
   S3_CONVERGENCE: 0.025,
 };
+
+/** S1 only trades when the λ solver reconciled its inputs this tightly. */
+const S1_MAX_FIT_ERROR = 0.02;
+
+/** S2's own quote-age tolerance — its signal IS the lagging quote. Real
+ * feeds showed ~5-minute quote gaps around goals; beyond 10 minutes a quote
+ * is treated as dead even for S2. */
+const S2_MAX_QUOTE_AGE_MS = 10 * 60_000;
 
 /** Only quotes fresher than this participate in steady-state strategies. */
 const QUOTE_FRESH_MS = 5 * 60_000;
@@ -68,6 +79,7 @@ function makeIntent(
  */
 export function coherence(ctx: StrategyContext): DecisionIntent[] {
   if (!ctx.model) return [];
+  if (ctx.model.fitError > S1_MAX_FIT_ERROR) return []; // loose fit → no trust
   if (ctx.trigger.type !== "odds") return [];
   const state = ctx.match;
   if (state && !(state.phase === SoccerPhase.NotStarted || isLive(state))) return [];
@@ -158,7 +170,10 @@ export function reaction(ctx: StrategyContext): DecisionIntent[] {
             `Model now ${fmtPct(model[i])} for ${view.outcomes[i].toUpperCase()}, ` +
             `stale quote implies ${fmtPct(view.marketProbs[i])}, edge +${fmtPct(edge)}.`,
         );
-        if (intent) intents.push(intent);
+        if (intent) {
+          intent.maxQuoteAgeMs = S2_MAX_QUOTE_AGE_MS;
+          intents.push(intent);
+        }
         break;
       }
     }

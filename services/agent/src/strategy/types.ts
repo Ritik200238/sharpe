@@ -17,6 +17,10 @@ export interface DecisionIntent {
   marketProb: number;
   /** modelProb − marketProb, always for the backed outcome. */
   edge: number;
+  /** Strategy-specific quote-age tolerance for the risk gate. S2's entire
+   * signal is quotes that lag an event, so it declares a wider window than
+   * the default liquidity guard. Omitted → limits.staleDataMs applies. */
+  maxQuoteAgeMs?: number;
   /** Human-readable, self-contained explanation. */
   reason: string;
   /** Inputs that produced this intent — replayable provenance. */

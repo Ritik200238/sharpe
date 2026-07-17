@@ -34,9 +34,21 @@ export class TrackStore {
   /** Open-position indexes — O(1) hot-path lookups instead of full scans. */
   private openByHash = new Map<string, DecisionRecord>();
   private openOutcomeKeys = new Set<string>();
+  /** Open SHADOW positions, keyed with strategy — dedupes suspended
+   * strategies' evidence trades (one shadow per market outcome at a time). */
+  private openShadowKeys = new Set<string>();
 
   private static outcomeKey(d: DecisionRecord): string {
     return `${d.fixtureId}|${d.marketKey}|${d.outcomeIndex}`;
+  }
+
+  private static shadowKey(
+    strategy: string,
+    fixtureId: number,
+    marketKey: string,
+    outcomeIndex: number,
+  ): string {
+    return `${strategy}|${fixtureId}|${marketKey}|${outcomeIndex}`;
   }
 
   constructor(network: Network, mode: string) {
@@ -65,7 +77,18 @@ export class TrackStore {
 
   private indexOpen(decision: DecisionRecord): void {
     this.openByHash.set(decision.hash, decision);
-    if (decision.stakeUsdc > 0) this.openOutcomeKeys.add(TrackStore.outcomeKey(decision));
+    if (decision.stakeUsdc > 0) {
+      this.openOutcomeKeys.add(TrackStore.outcomeKey(decision));
+    } else {
+      this.openShadowKeys.add(
+        TrackStore.shadowKey(
+          decision.strategy,
+          decision.fixtureId,
+          decision.marketKey,
+          decision.outcomeIndex,
+        ),
+      );
+    }
   }
 
   addDecision(decision: DecisionRecord): void {
@@ -104,6 +127,14 @@ export class TrackStore {
     if (decision) {
       this.openByHash.delete(settlement.decisionHash);
       this.openOutcomeKeys.delete(TrackStore.outcomeKey(decision));
+      this.openShadowKeys.delete(
+        TrackStore.shadowKey(
+          decision.strategy,
+          decision.fixtureId,
+          decision.marketKey,
+          decision.outcomeIndex,
+        ),
+      );
     }
     fs.appendFileSync(this.settlementsFile, `${JSON.stringify(settlement)}\n`);
   }
@@ -124,6 +155,18 @@ export class TrackStore {
   /** O(1) duplicate-exposure check for the engine's hot path. */
   hasOpenSameOutcome(fixtureId: number, marketKey: string, outcomeIndex: number): boolean {
     return this.openOutcomeKeys.has(`${fixtureId}|${marketKey}|${outcomeIndex}`);
+  }
+
+  /** O(1) duplicate-shadow check (per strategy). */
+  hasOpenShadow(
+    strategy: string,
+    fixtureId: number,
+    marketKey: string,
+    outcomeIndex: number,
+  ): boolean {
+    return this.openShadowKeys.has(
+      TrackStore.shadowKey(strategy, fixtureId, marketKey, outcomeIndex),
+    );
   }
 
   /** Realized P&L and its running peak, replayed from the settlement ledger. */

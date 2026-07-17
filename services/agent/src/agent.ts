@@ -279,8 +279,19 @@ export class Agent {
       riskState: this.riskState,
       limits: DEFAULT_LIMITS,
       mode: this.cfg.execMode,
-      hasOpenSameOutcome: (fid, marketKey, outcomeIndex) =>
-        this.track.hasOpenSameOutcome(fid, marketKey, outcomeIndex),
+      hasOpenIdentical: (intent, shadow) =>
+        shadow
+          ? this.track.hasOpenShadow(
+              intent.strategy,
+              intent.fixtureId,
+              intent.marketKey,
+              intent.outcomeIndex,
+            )
+          : this.track.hasOpenSameOutcome(
+              intent.fixtureId,
+              intent.marketKey,
+              intent.outcomeIndex,
+            ),
     }, recvTs);
 
     for (const veto of output.vetoes) {

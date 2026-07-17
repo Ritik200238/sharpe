@@ -70,11 +70,12 @@ export function gate(
   }
 
   // Quote freshness: the intent's own odds timestamp vs the trigger moment.
-  // Both are feed-source timestamps — deterministic under replay. S2 trades
-  // quotes that LAG an event, but a quote older than staleDataMs is not
-  // real liquidity and must not be priced at all.
+  // Both are feed-source timestamps — deterministic under replay. A quote
+  // older than the tolerance is not real liquidity and must not be priced.
+  // Strategies whose signal IS the lag (S2) declare their own wider window.
+  const maxQuoteAge = intent.maxQuoteAgeMs ?? limits.staleDataMs;
   const quoteAge = nowTs - intent.inputs.oddsTs;
-  if (quoteAge > limits.staleDataMs) {
+  if (quoteAge > maxQuoteAge) {
     return {
       allowed: false,
       vetoReason: `quote stale (${Math.round(quoteAge / 1000)}s old)`,

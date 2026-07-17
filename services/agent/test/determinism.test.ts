@@ -57,11 +57,17 @@ async function runPipeline(replayDir: string): Promise<string[]> {
       };
       const out = runEngine(
         ctx,
-        { ...deps, hasOpenSameOutcome: (f, m, o) => open.has(`${f}|${m}|${o}`) },
+        {
+          ...deps,
+          hasOpenIdentical: (intent, shadow) =>
+            open.has(`${shadow ? intent.strategy : "real"}|${intent.fixtureId}|${intent.marketKey}|${intent.outcomeIndex}`),
+        },
         event.recvTs,
       );
       for (const d of out.decisions) {
-        open.add(`${d.fixtureId}|${d.marketKey}|${d.outcomeIndex}`);
+        open.add(
+          `${d.stakeUsdc === 0 ? d.strategy : "real"}|${d.fixtureId}|${d.marketKey}|${d.outcomeIndex}`,
+        );
         hashes.push(d.hash);
       }
     } else if (event.kind === "score") {
@@ -92,11 +98,17 @@ async function runPipeline(replayDir: string): Promise<string[]> {
       };
       const out = runEngine(
         ctx,
-        { ...deps, hasOpenSameOutcome: (f, m, o) => open.has(`${f}|${m}|${o}`) },
+        {
+          ...deps,
+          hasOpenIdentical: (intent, shadow) =>
+            open.has(`${shadow ? intent.strategy : "real"}|${intent.fixtureId}|${intent.marketKey}|${intent.outcomeIndex}`),
+        },
         event.recvTs,
       );
       for (const d of out.decisions) {
-        open.add(`${d.fixtureId}|${d.marketKey}|${d.outcomeIndex}`);
+        open.add(
+          `${d.stakeUsdc === 0 ? d.strategy : "real"}|${d.fixtureId}|${d.marketKey}|${d.outcomeIndex}`,
+        );
         hashes.push(d.hash);
       }
     }

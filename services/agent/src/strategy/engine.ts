@@ -14,10 +14,12 @@ export interface EngineDeps {
   riskState: RiskState;
   limits: RiskLimits;
   mode: "paper" | "chain";
-  /** True when an identical exposure (same market, same outcome) is open.
-   * Different outcomes/strategies may coexist — the per-market and
-   * per-fixture exposure caps in risk/limits govern total stacking. */
-  hasOpenSameOutcome: (fixtureId: number, marketKey: string, outcomeIndex: number) => boolean;
+  /** Duplicate-exposure check. shadow=false: an open REAL position on the
+   * same (market, outcome) — any strategy. shadow=true: an open SHADOW
+   * position on the same (strategy, market, outcome) — without this,
+   * a suspended strategy would re-shadow the same market on every odds
+   * tick (the 107k-decision match from the first real-data backtest). */
+  hasOpenIdentical: (intent: DecisionIntent, shadow: boolean) => boolean;
 }
 
 export interface EngineOutput {
@@ -44,12 +46,16 @@ export function runEngine(ctx: StrategyContext, deps: EngineDeps, _freshestFeedT
     const intents = ALL_STRATEGIES[strategyId](ctx);
 
     for (const intent of intents) {
-      if (deps.hasOpenSameOutcome(intent.fixtureId, intent.marketKey, intent.outcomeIndex)) {
-        vetoes.push({ intent, reason: "identical position already open" });
+      const suspended = deps.suspension.isSuspended(strategyId);
+      if (deps.hasOpenIdentical(intent, suspended)) {
+        vetoes.push({
+          intent,
+          reason: suspended
+            ? "identical shadow position already open"
+            : "identical position already open",
+        });
         continue;
       }
-
-      const suspended = deps.suspension.isSuspended(strategyId);
       const gateResult: GateResult = gate(intent, deps.riskState, deps.limits, ctx.nowTs);
       if (!gateResult.allowed && !suspended) {
         vetoes.push({ intent, reason: gateResult.vetoReason ?? "risk gate" });

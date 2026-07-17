@@ -269,13 +269,15 @@ async function runMatch(
         riskState,
         limits: DEFAULT_LIMITS,
         mode: "paper",
-        hasOpenSameOutcome: (fid, marketKey, outcomeIndex) =>
+        hasOpenIdentical: (intent, shadow) =>
           [...open.values()].some(
             (d) =>
-              d.fixtureId === fid &&
-              d.marketKey === marketKey &&
-              d.outcomeIndex === outcomeIndex &&
-              d.stakeUsdc > 0,
+              d.fixtureId === intent.fixtureId &&
+              d.marketKey === intent.marketKey &&
+              d.outcomeIndex === intent.outcomeIndex &&
+              (shadow
+                ? d.stakeUsdc === 0 && d.strategy === intent.strategy
+                : d.stakeUsdc > 0),
           ),
       },
       recvTs,
