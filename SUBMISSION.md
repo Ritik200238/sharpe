@@ -14,7 +14,7 @@
 | **TxLINE as primary data source** | ✅ done | live SSE scores+odds, historical backfill, settlement proofs (list below) |
 | **Solana signup** | ✅ done | on-chain free-tier subscription tx `XeNPJG…x6Kxm` (devnet) |
 | **Demo video (≤5 min)** | ⏳ **operator action** | turnkey shot-by-shot script in `DEMOVIDEO.md` — ~20 min to record |
-| **Deployed app / testable endpoint** | ⏳ **operator action** | `Dockerfile` + `docker-compose.yml` (agent) + `apps/web/vercel.json` (frontend); steps in `docs/DEPLOY.md` |
+| **Deployed app / testable endpoint** | ✅ **frontend LIVE** · ⏳ agent host | Frontend deployed on GitHub Pages: **https://ritik200238.github.io/sharpe/** (add `?api=<agent-url>` to point it at any agent, no rebuild). Agent ships via `Dockerfile`/`docker-compose.yml` to any VPS (`docs/DEPLOY.md`) — the one piece needing your host. |
 | **Brief technical documentation** | ✅ done | `README.md`, `PLAN.md`, `SHARPEFRONTEND.md`, this file |
 | **TxLINE endpoints list** | ✅ done | below |
 | **API feedback** | ✅ done | below |

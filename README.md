@@ -16,6 +16,10 @@
 *It watches every World Cup match in real time, prices every outcome, trades mispricings with USDC —*
 *and every decision is hashed onto Solana **before** the result exists. Settlement is a Merkle proof, not a promise.*
 
+### ▶ Live frontend: **[ritik200238.github.io/sharpe](https://ritik200238.github.io/sharpe/)**
+
+*Deployed on GitHub Pages. Point it at any running agent with `…/sharpe/?api=<agent-url>` — no rebuild.*
+
 </div>
 
 ---
