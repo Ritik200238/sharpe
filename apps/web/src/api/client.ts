@@ -12,8 +12,22 @@ import type {
   TrackRecord,
 } from "./types";
 
-export const BASE: string =
-  (import.meta.env.VITE_API_BASE as string | undefined) ?? "http://localhost:8787";
+/**
+ * Backend base URL. Precedence: `?api=<url>` query param (lets the deployed
+ * site point at any agent with no rebuild — judge-friendly) → build-time
+ * VITE_API_BASE → localhost dev default.
+ */
+function resolveBase(): string {
+  try {
+    const q = new URLSearchParams(window.location.search).get("api");
+    if (q) return q.replace(/\/+$/, "");
+  } catch {
+    /* SSR/no-window — ignore */
+  }
+  return (import.meta.env.VITE_API_BASE as string | undefined) ?? "http://localhost:8787";
+}
+
+export const BASE: string = resolveBase();
 
 async function getJson<T>(path: string): Promise<T> {
   const res = await fetch(BASE + path, { headers: { Accept: "application/json" } });
