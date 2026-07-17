@@ -1,135 +1,239 @@
-# SHARPE
+<div align="center">
 
-**The autonomous sports trading agent with an unfakeable public track record.**
+<img src="docs/assets/banner.svg" alt="SHARPE — the autonomous sports trading agent with an unfakeable public track record" width="100%"/>
 
-SHARPE watches every World Cup match in real time through [TxLINE](https://txline.txodds.com)'s
-cryptographically-anchored data feeds, computes the fair price of every outcome, trades
-mispricings with USDC — and proves every step. Each decision is hashed and committed to
-Solana **before** the outcome is known; each settlement is verified against TxODDS'
-on-chain Merkle roots via the TxLINE program's `validateStatV2`. No oracle committee,
-no admin key, no way to fake the record.
+<br/>
 
-Built for the TxODDS World Cup Hackathon — **Track 2: Trading Tools & Agents**.
+[![tests](https://img.shields.io/badge/tests-36%20passing-4bd1a0?style=flat-square&logo=github)](services/agent/test)
+[![determinism](https://img.shields.io/badge/determinism-bit--for--bit-4bd1a0?style=flat-square)](services/agent/test/determinism.test.ts)
+[![typescript](https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square&logo=typescript&logoColor=white)](tsconfig.base.json)
+[![solana](https://img.shields.io/badge/Solana-devnet-9945FF?style=flat-square&logo=solana)](https://explorer.solana.com/?cluster=devnet)
+[![txline](https://img.shields.io/badge/data-TxLINE%20live-e0655f?style=flat-square)](https://txline.txodds.com)
+[![hackathon](https://img.shields.io/badge/TxODDS%20World%20Cup-Track%202%3A%20Trading%20Agents-d9a94a?style=flat-square)](https://earn.superteam.fun)
+
+**Every betting "expert" can fake their track record. SHARPE can't lie.**
+
+*It watches every World Cup match in real time, prices every outcome, trades mispricings with USDC —*
+*and every decision is hashed onto Solana **before** the result exists. Settlement is a Merkle proof, not a promise.*
+
+</div>
 
 ---
 
 ## Why this exists
 
-Every betting "expert" can fake their track record: cherry-picked screenshots, deleted
-losses, backdated picks. And every trading bot demo can quietly re-run until it looks
-good. SHARPE makes both impossible:
+The sports-trading world runs on unverifiable claims: tipsters with cherry-picked screenshots, bots whose losing runs quietly disappear, "verified" records hosted by whoever profits from them. Meanwhile prediction markets settle through oracle committees and dispute windows — humans, again.
 
-1. **Commit before outcome.** The hash of every decision (inputs, model state, stake,
-   reason) lands on Solana while the match is still running.
-2. **Settle by proof.** When TxLINE publishes the `game_finalised` record, the agent
-   fetches the Merkle proof and verifies the final stats against the daily root that
-   TxODDS anchored on-chain. Truth is cryptographic, not editorial.
-3. **Learn only from proven facts.** Stake sizing, strategy allocation, and
-   self-suspension all derive — deterministically — from the settled, provable history.
+SHARPE deletes the human from both ends of the trust problem:
 
-## How it thinks (the brain, in one breath)
+- 🧠 **It decides alone.** A deterministic pricing brain — no LLM, no black box, no manual approvals. Same input → same decision → same hash. Always. *(Proven by test, bit-for-bit, [across the full pipeline](services/agent/test/determinism.test.ts) — and confirmed on real match data across independent runs.)*
+- ⛓️ **It commits before the outcome.** Every decision's canonical hash lands on Solana while the ball is still rolling. Backdating, pruning, or "forgetting" a loss is cryptographically impossible.
+- ⚖️ **It settles by proof, no referee.** When TxLINE publishes a match's `game_finalised` record, SHARPE fetches the Merkle proof and verifies the result against the daily root TxODDS anchored **on-chain** — via the TxLINE program's `validateStatV2`. **No verified proof → no settlement.** Local data alone can never move money.
+- 📉 **It learns only from facts it can prove.** Stake sizing shrinks when its calibration slips, capital flows toward strategies with proven ROI, and a statistically broken strategy **suspends itself** — every adaptation a pure function of the settled, on-chain-verifiable history.
 
-The market itself is the prior: consensus 1X2 + totals prices pin down goal
-expectancies (λ_home, λ_away) for an in-play Poisson model. Live state (score, cards,
-time remaining) conditions the model; three deterministic strategies trade deviations:
+Built for the **TxODDS World Cup Hackathon — Track 2 (Trading Tools & Agents)**. Designed to outlive it.
 
-| Strategy | Trigger | Edge it captures |
+---
+
+## The proof — a real semifinal, settled by math
+
+England 1–2 Argentina (fixture `18241006`, World Cup semifinal). SHARPE submits the final-score Merkle proof to the TxLINE program on Solana devnet, twice:
+
+```text
+[1/2] TRUE claim — "participant 2 won" (goals P1 − P2 < 0):
+  verified: true  | proven stats: [{key:1, value:1, period:100}, {key:2, value:2, period:100}]
+
+[2/2] FALSE claim — "participant 1 won" (goals P1 − P2 > 0):
+  verified: false
+
+RESULT: settlement primitive PROVEN — the on-chain Merkle root accepts
+the true outcome and rejects the false one.
+```
+
+The chain accepted the truth and rejected the lie. That single mechanic is the entire product: a trading agent whose wins, losses, and settlements are **checkable by anyone, trusted by no one**. Reproduce it yourself: `npx tsx tools/verify-proof.ts` ([source](services/agent/tools/verify-proof.ts)).
+
+<div align="center">
+
+<img src="docs/assets/dashboard-live.jpg" alt="SHARPE live dashboard — the agent trading a live match on devnet" width="92%"/>
+
+*The dashboard mid-session — SHARPE live on devnet, pricing a real match as it plays.*
+
+</div>
+
+---
+
+## Watch it think
+
+Every decision ships with its full reasoning, in plain language, streamed live over SSE. From a real World Cup semifinal replayed through the live pipeline:
+
+```text
+[decide] S2_REACTION 50 USDC on OVER (Total Goals FT 2.5) @ 1.8763
+         Goal at seq 2 repriced this match; quote is 298s older than the event.
+         Model now 71.5% for OVER, stale quote implies 53.3%, edge +18.2%.
+
+[settle] fixture 18241006 finalised 1-2; settling 8 position(s)
+[settle] proof VERIFIED on-chain — goals(P1)−goals(P2) = -1 → PART2
+[review] Predictions and outcomes consistent this match.
+         S2_REACTION: 3 decisions, 1 win, −43.58 USDC — under SPRT watch.
+```
+
+That last line is the part most agents don't have: **SHARPE grades its own homework** — publicly, on-chain, after every match — and puts its own underperforming strategy on statistical probation.
+
+---
+
+## How it thinks
+
+The market itself is the prior: TxLINE's de-margined consensus (1X2 + totals) pins down goal expectancies (λ_home, λ_away) for an in-play Poisson model. Live state — score, red cards, minutes remaining — conditions the model; three deterministic strategies trade the deviations:
+
+| Strategy | Fires on | The edge it captures |
 |---|---|---|
-| **S1 Coherence** | odds update | cross-market inconsistency vs the jointly-fitted model |
-| **S2 Reaction** | goal / red card | quotes that lag the event repricing |
-| **S3 Convergence** | drift, no event | quotes that ran from consensus without news |
+| **S1 · COHERENCE** | odds update | markets that disagree with their own jointly-fitted model — pure cross-market arithmetic |
+| **S2 · REACTION** | goal / red card | quotes that lag the event repricing — speed + math, not prediction |
+| **S3 · CONVERGENCE** | drift, no event | quotes that ran from consensus without any news — fade the drift |
 
-Sizing is quarter-Kelly, scaled by **calibration** (rolling Brier of model vs market on
-settled decisions) and **allocation** (deterministic UCB over each strategy's proven
-ROI). A per-strategy **SPRT** self-suspends anything statistically underperforming its
-own promises — it keeps trading in shadow mode and re-arms itself after a clean run.
-Same input → same decision → same hash. Always.
+Sizing is quarter-Kelly, scaled by two live feedback loops: **calibration** (rolling Brier of model vs market on settled decisions — stakes shrink when the model stops beating the market) and **allocation** (deterministic UCB over each strategy's realized ROI). A per-strategy **SPRT** self-suspends anything statistically underperforming its own stated probabilities; it keeps trading in shadow mode and re-arms itself after a clean run.
+
+One design law governs the whole market surface: **if an outcome can't be proven on-chain as a single binary predicate, SHARPE doesn't trade it.**
+
+```mermaid
+flowchart LR
+    TX[("TxLINE<br/>scores + odds SSE")] --> FEED[feed<br/>normalize + journal]
+    FEED --> STATE[match & odds state]
+    STATE --> MODEL["λ-model<br/>in-play Poisson"]
+    MODEL --> S[S1 · S2 · S3]
+    S --> RISK["risk gates<br/>¼-Kelly · caps · breakers"]
+    RISK --> D{{decision + reason}}
+    D --> SOL[("Solana<br/>hash committed<br/>BEFORE outcome")]
+    D --> TRACK[(track record<br/>append-only)]
+    TX -- "game_finalised" --> PROOF[Merkle proof]
+    PROOF --> VALIDATE["validateStatV2<br/>on-chain root check"]
+    VALIDATE -- "verified only" --> SETTLE[settle + P&L]
+    SETTLE --> LEARN["calibration · UCB · SPRT<br/>learn from proven facts"]
+    LEARN --> RISK
+```
+
+---
+
+## Engineering guarantees (each one enforced by test)
+
+| Guarantee | Mechanism | Evidence |
+|---|---|---|
+| Same input → same decision, bit-for-bit | pure decision core, no wall-clock/randomness in the path | [determinism.test.ts](services/agent/test/determinism.test.ts) + identical equity across independent real-data runs |
+| `kill -9` loses nothing | full risk + intelligence state rebuilt from the append-only ledger on boot | [boot-rebuild.test.ts](services/agent/test/boot-rebuild.test.ts) |
+| A commitment can never be silently lost | write-ahead journal before broadcast; boot reconcile; retried forever | [commit-wal.test.ts](services/agent/test/commit-wal.test.ts) |
+| No verified proof → no settlement | `validateStatV2` result is law; failed proofs leave positions open for retry | [agent.ts settle path](services/agent/src/agent.ts) |
+| Bad data can't poison the book | degenerate-quote rejection, NaN guards, stale-quote gate, drawdown breaker | [risk.test.ts](services/agent/test/risk.test.ts) |
+| Feeds drop, agent doesn't | SSE auto-reconnect with resume, JWT renewal, idle watchdogs, contained event errors | [platform/sse.ts](services/agent/src/platform/sse.ts) |
+
+---
+
+## Run it in 60 seconds
+
+```bash
+git clone https://github.com/Ritik200238/sharpe && cd sharpe
+npm install
+
+# replay a match through the full pipeline (no credentials needed)
+npx tsx services/agent/tools/synthesize.ts
+npm run replay --workspace services/agent -- --replay-dir data/synthetic
+
+# watch it think
+open http://localhost:8787            # live dashboard
+curl -N localhost:8787/stream         # the brain feed, raw SSE
+```
+
+With TxLINE credentials (one-time, ~1 min — a devnet wallet self-subscribes on-chain, free tier):
+
+```bash
+npm run setup  --workspace services/recorder   # wallet → airdrop → subscribe → activate
+npm run start  --workspace services/agent      # goes live on the real feeds, unattended
+```
+
+**Read-only API** (what judges can poke):
+
+| Endpoint | What it shows |
+|---|---|
+| `/status` | brain state, equity, allocations, calibration, 30-day digest summary |
+| `/stream` | live SSE feed of every decision/settlement/review (`?strategy=`, `?fixtureId=`, Last-Event-ID resume) |
+| `/decisions` · `/positions` · `/settlements` · `/reviews` | the glass box, record by record |
+| `/track-record` | the full auditable ledger in one call |
+| `/digest?days=30` | season scorecard per strategy + inactivity flags |
+| `/health` | liveness + phase |
+
+---
 
 ## Repository layout
 
 ```
-services/agent/       the product — autonomous trading agent
-  src/feed/           SSE live feed + replay feed (identical event interface)
-  src/state/          match state (phases, stat keys) + odds state
-  src/model/          de-vig (Shin), Poisson in-play model, market pricing
-  src/strategy/       S1/S2/S3, decision engine, canonical decision hashing
-  src/risk/           fractional Kelly + hard limits, drawdown breaker
-  src/intelligence/   calibration, UCB allocation, SPRT, self-reviews
-  src/exec/           on-chain decision commitments (Solana)
-  src/settle/         proof planning + validateStatV2 verification
-  src/track/          append-only, event-sourced public track record
-  src/api/            read-only status API + dashboard
-  tools/synthesize.ts deterministic synthetic-match generator
-  test/               unit + determinism suite
-services/recorder/    TxLINE signup + raw stream recorder (builds the corpus)
-vendor/tx-on-chain/   TxODDS' official examples/IDL (reference, cloned)
-judge.md · CLAUDE.md · PLAN.md · DECISIONS.md   the build's governing docs
+services/agent/          the product — autonomous trading agent
+  src/feed/              SSE live feed + replay feed (one interface, identical semantics)
+  src/state/             match state (phases, stat keys) · consensus odds state
+  src/model/             Shin de-vig · market-implied λ solver · in-play Poisson pricing
+  src/strategy/          S1/S2/S3 · decision engine · canonical hashing
+  src/risk/              fractional Kelly · exposure caps · drawdown breaker
+  src/intelligence/      calibration · UCB allocation · SPRT self-suspension · digests
+  src/exec/              write-ahead on-chain commitments (Solana)
+  src/settle/            proof planning + validateStatV2 verification
+  src/track/             append-only, event-sourced public track record
+  src/api/               dashboard · status API · live SSE brain feed
+  tools/                 verify-proof · 20-match backtest · synthetic match generator
+  test/                  36 tests: model math, intelligence, WAL crashes, bit-for-bit determinism
+services/recorder/       TxLINE signup + raw stream recorder + historical backfill
+data/recordings/         20 real World Cup knockout matches (scores + odds journals)
+PLAN.md · DECISIONS.md   how this was designed, and why
 ```
 
-## Run it
+---
 
-```bash
-npm install
+## TxLINE integration (the data layer)
 
-# 1. one-time TxLINE signup + start recording (devnet)
-npm run setup  --workspace services/recorder
-npm run record --workspace services/recorder
-
-# 2. run the agent LIVE (waits for credentials automatically)
-npm run start --workspace services/agent -- --network devnet --exec paper
-
-# 3. or replay any recorded (or synthetic) match through the same pipeline
-npx tsx services/agent/tools/synthesize.ts
-npm run replay --workspace services/agent -- --replay-dir data/synthetic
-
-# 4. watch it think
-open http://localhost:8787        # dashboard (live-updating)
-curl  http://localhost:8787/status        # brain state + 30-day digest summary
-curl  http://localhost:8787/decisions     # glass-box decision feed
-curl  http://localhost:8787/digest?days=7 # season scorecard + inactivity flags
-curl -N http://localhost:8787/stream      # live brain feed (SSE; ?strategy=, ?fixtureId=)
-
-# tests (17: model math, intelligence layer, bit-for-bit determinism)
-npm test --workspace services/agent
-```
-
-Execution modes: `--exec paper` (default) tracks positions off-chain; `--exec chain`
-additionally commits every decision/settlement/review hash to Solana and verifies
-settlements through `validateStatV2`.
-
-## TxLINE endpoints used
+SHARPE is built end-to-end on [TxLINE](https://txline.txodds.com) — TxODDS' cryptographically anchored sports data layer. Endpoints used:
 
 | Purpose | Endpoint |
 |---|---|
 | Guest session | `POST /auth/guest/start` |
-| API activation | `POST /api/token/activate` (after on-chain `subscribe`) |
-| Live scores | `GET /api/scores/stream` (SSE) |
-| Live odds | `GET /api/odds/stream` (SSE) |
-| Fixtures | `GET /api/fixtures/snapshot` |
-| Historical scores | `GET /api/scores/historical/{fixtureId}` |
+| On-chain free-tier subscribe → API activation | TxLINE program `subscribe` + `POST /api/token/activate` |
+| Live scores (SSE) | `GET /api/scores/stream` |
+| Live consensus odds (SSE) | `GET /api/odds/stream` |
+| Fixture discovery | `GET /api/fixtures/snapshot` |
+| Historical match recovery | `GET /api/scores/historical/{fixtureId}` · `GET /api/odds/updates/{fixtureId}` |
 | Settlement proofs | `GET /api/scores/stat-validation?fixtureId&seq&statKeys` |
-| On-chain verification | `validateStatV2` on the TxLINE program (devnet `6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J`) |
+| **On-chain verification** | **`validateStatV2` CPI-able instruction** — devnet `6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J` |
 
-## Status
+Our devnet subscription is itself on-chain: [`XeNPJG…x6Kxm`](https://explorer.solana.com/tx/XeNPJGSyBW9XUVXiPTqjsPMyWCBUgy3BwwNB1eRHn7bZiiviCejQLoMfFZMrgra94E5uk4PLcnBsZioeoax6Kxm?cluster=devnet).
 
-- [x] Data spine: live SSE + replay with identical semantics, raw-fidelity journals
-- [x] Deterministic brain: de-vig, λ-solver, in-play Poisson, S1–S3, risk engine
-- [x] Intelligence layer: calibration-scaled Kelly, UCB allocation, SPRT self-suspension, on-chain self-reviews
-- [x] Track record store: append-only, event-sourced, crash-safe
-- [x] TxLINE signup live on devnet (on-chain free-tier subscription, activated API token)
-- [x] Real corpus: 20 complete World Cup knockout matches recovered via historical endpoints
-- [x] **Trustless settlement proven on real data** — England 1-2 Argentina verified via
-      `validateStatV2` against the on-chain Merkle root (true claim accepted, false claim rejected)
-- [x] Live 24/7: agent trading the real devnet streams (paper mode); recorder capturing
-- [x] Hardening: boot-time intelligence rebuild · write-ahead commit journal with boot
-      reconcile · `GET /stream` live brain feed (SSE) · `GET /digest` season scorecard
-- [x] 36-test suite incl. bit-for-bit determinism over the full pipeline
-- [ ] 20-match backtest report (harness built, sweep running)
-- [ ] Anchor programs (escrow market, vault, registry) — P3, toolchain confirmed working
-- [ ] Demo video + deployment
+**What we loved:** the `llms.txt` docs index, the runnable devnet examples repo, `Pct` shipping de-margined consensus probabilities, and `game_finalised` (statusId 100) as a single settlement marker across regulation/ET/penalties. **Friction we hit:** the historical endpoint returns SSE-formatted text where the docs imply JSON arrays; devnet faucet quotas (not TxODDS' fault) gate first-time onboarding; `seq` semantics for proofs deserve a doc box of their own. Full notes in [DECISIONS.md](DECISIONS.md).
 
 ---
 
-*This project reads live data from TxLINE under the World Cup hackathon access terms.
-It is a technology demonstration on Solana devnet; nothing here is gambling services
-or financial advice.*
+## Track 2 scorecard — how SHARPE maps to the judging criteria
+
+| Criterion | Where SHARPE answers it |
+|---|---|
+| **Core functionality & data ingestion** | dual SSE streams, raw-fidelity journals, replay-identical pipeline, 20-match real corpus |
+| **Autonomous operation** | one command → discovers fixtures, trades, settles, learns, recovers from crashes — zero human input (config at deploy only) |
+| **Logic & code architecture** | deterministic glass-box: every decision carries its math and its reason; 36 tests; frozen decision-path discipline |
+| **Innovation & novelty** | commit-before-outcome + proof-gated settlement + an agent that statistically audits **itself** — a track record that cannot be faked |
+| **Production readiness** | write-ahead commitment journal, boot reconcile, self-healing feeds, exposure caps, drawdown breakers, live 24/7 on devnet |
+
+**Submission checklist:** public repo ✔ · working devnet build ✔ · TxLINE as primary data source ✔ · technical docs ([PLAN.md](PLAN.md), this README) ✔ · demo video — in production · deployed judge endpoint — deployment phase.
+
+---
+
+## Roadmap
+
+- **On-chain escrow markets + vault** (Anchor programs; toolchain verified) — USDC positions held in PDAs, settlement CPIs into `validateStatV2`, payouts released by proof
+- **The agent's bankroll** — non-custodial deposits riding the agent's provable performance
+- **Third-party strategists** — anyone deploys a strategy; every strategy inherits the same unfakeable accountability
+- Mainnet, audits, and the venue-agnostic execution layer
+
+---
+
+<div align="center">
+
+*SHARPE is a technology demonstration on Solana devnet using TxLINE data under the World Cup hackathon terms.
+Nothing here is gambling services or financial advice.*
+
+**decide → commit → prove → settle → learn → repeat**
+
+</div>

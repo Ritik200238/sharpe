@@ -1,0 +1,53 @@
+<svg width="1280" height="300" viewBox="0 0 1280 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b0e13"/>
+      <stop offset="1" stop-color="#101722"/>
+    </linearGradient>
+    <linearGradient id="spark" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#4bd1a0" stop-opacity="0.15"/>
+      <stop offset="1" stop-color="#4bd1a0" stop-opacity="0.9"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="300" fill="url(#bg)"/>
+
+  <!-- faint grid -->
+  <g stroke="#1e2530" stroke-width="1">
+    <line x1="0" y1="75"  x2="1280" y2="75"/>
+    <line x1="0" y1="150" x2="1280" y2="150"/>
+    <line x1="0" y1="225" x2="1280" y2="225"/>
+    <line x1="320"  y1="0" x2="320"  y2="300"/>
+    <line x1="640"  y1="0" x2="640"  y2="300"/>
+    <line x1="960"  y1="0" x2="960"  y2="300"/>
+  </g>
+
+  <!-- probability sparkline: fair value repricing on a goal -->
+  <g transform="translate(760,0)">
+    <polyline fill="none" stroke="url(#spark)" stroke-width="3"
+      points="0,210 60,206 120,208 180,200 240,204 300,196 330,192 336,118 400,110 460,114 520,104"/>
+    <circle cx="336" cy="118" r="6" fill="#4bd1a0"/>
+    <text x="352" y="106" font-family="Consolas,Menlo,monospace" font-size="17" fill="#4bd1a0">goal → model reprices</text>
+    <text x="352" y="130" font-family="Consolas,Menlo,monospace" font-size="15" fill="#6b7686">stale quote = edge</text>
+  </g>
+
+  <!-- wordmark -->
+  <text x="84" y="150" font-family="Consolas,Menlo,monospace" font-size="86" font-weight="bold"
+        fill="#d7dee8" letter-spacing="10">SHARPE<tspan fill="#4bd1a0">▮</tspan></text>
+  <text x="88" y="196" font-family="Consolas,Menlo,monospace" font-size="21" fill="#6b7686">
+    the autonomous sports trading agent
+  </text>
+  <text x="88" y="226" font-family="Consolas,Menlo,monospace" font-size="21" fill="#4bd1a0">
+    with an unfakeable public track record
+  </text>
+
+  <!-- commit → prove → settle chain -->
+  <g font-family="Consolas,Menlo,monospace" font-size="15" fill="#6b7686">
+    <text x="88" y="272">decide <tspan fill="#4bd1a0">→</tspan> commit on-chain <tspan fill="#4bd1a0">→</tspan> outcome lands <tspan fill="#4bd1a0">→</tspan> Merkle-proof settle <tspan fill="#4bd1a0">→</tspan> learn from proven facts <tspan fill="#4bd1a0">→</tspan> repeat</text>
+  </g>
+
+  <!-- hash ribbon -->
+  <text x="88" y="46" font-family="Consolas,Menlo,monospace" font-size="13" fill="#2a3442">
+    sha256 4f2a…c9e1 committed before outcome · validateStatV2 ✓ verified · devnet 6pW64gN…yP2J
+  </text>
+</svg>
