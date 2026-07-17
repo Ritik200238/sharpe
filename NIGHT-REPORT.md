@@ -37,14 +37,22 @@ tested, committed, and pushed** — trailer-free, on `Ritik200238/sharpe`.
    real dashboard screenshot; the GIF falls out of the `DEMOVIDEO.md` setup for free. Not
    worth trading a must-have for a cosmetic.
 
-## Your morning checklist (~30 min, needs your accounts)
+## Update — the frontend is now LIVE (deployed autonomously)
 
-1. **Deploy the frontend:** vercel.com/new → import `Ritik200238/sharpe` → Root Directory
-   `apps/web` → deploy. (Set `VITE_API_BASE` once the agent has a public URL.)
-2. **Host the agent:** pick a small box (Railway/Fly/any VPS), `docker compose up -d --build`,
-   run the one-time `... recorder ... setup`. (`docs/DEPLOY.md` has exact steps.)
-3. **Record the video:** follow `DEMOVIDEO.md` — the stage-setup commands are copy-paste.
-4. **Fill the Superteam form:** all fields/links are pre-written in `SUBMISSION.md`.
+**https://ritik200238.github.io/sharpe/** — deployed to GitHub Pages via a CI workflow,
+verified rendering in production (shows the honest offline state until an agent is hosted).
+Point it at any agent with `?api=<agent-url>` — no rebuild. So deployment's frontend half
+is **done**; only the agent host remains.
+
+## Your morning checklist (~20 min, needs your accounts)
+
+1. **Host the agent:** pick a small box (Railway/Fly/any VPS), `docker compose up -d --build`,
+   run the one-time `... recorder ... setup`. (`docs/DEPLOY.md` has exact steps.) Then open
+   `https://ritik200238.github.io/sharpe/?api=<your-agent-url>` → the live frontend, fully wired.
+2. **Record the video:** follow `DEMOVIDEO.md` — the stage-setup commands are copy-paste.
+3. **Fill the Superteam form:** all fields/links are pre-written in `SUBMISSION.md`.
+4. *(Optional)* also deploy the frontend to Vercel via `apps/web/vercel.json` if you prefer
+   a custom domain — GitHub Pages already covers the requirement.
 
 ## Still running right now
 - **Live agent** (`:8787`) — hardened build, live on devnet.
