@@ -81,6 +81,11 @@ export interface StoreState {
 }
 
 const FEED_CAP = 120;
+/** Bound the dedupe sets so a 24/7 session can't leak memory. Feed keys are
+ * unique and never re-pushed (each decision streams once; re-fetches go
+ * through upsert, not pushFeed), so trimming the oldest keys — far older than
+ * anything still in the 120-item feed — can never resurrect a duplicate. */
+const SEEN_KEYS_CAP = 5000;
 const DECISION_LIMIT = 200;
 const STATUS_POLL_MS = 5000;
 const FALLBACK_POLL_MS = 2000;
@@ -276,6 +281,7 @@ class SharpeStore {
       const key = this.vetoKey(v);
       if (this.seenVetoKeys.has(key)) continue;
       this.seenVetoKeys.add(key);
+      this.boundSet(this.seenVetoKeys);
       this.pushFeed({ key: `v:${key}`, type: "veto", ts: v.ts, payload: v });
     }
   }
@@ -313,9 +319,23 @@ class SharpeStore {
 
   // ---------- feed ----------
 
+  /** Trim a dedupe set to its most-recent entries (JS Sets keep insertion
+   * order, so the first entries are the oldest). */
+  private boundSet(set: Set<string>): void {
+    if (set.size <= SEEN_KEYS_CAP) return;
+    const drop = set.size - Math.floor(SEEN_KEYS_CAP * 0.8);
+    const it = set.values();
+    for (let i = 0; i < drop; i++) {
+      const next = it.next();
+      if (next.done) break;
+      set.delete(next.value);
+    }
+  }
+
   private pushFeed(item: FeedItem): void {
     if (this.seenFeedKeys.has(item.key)) return;
     this.seenFeedKeys.add(item.key);
+    this.boundSet(this.seenFeedKeys);
     if (this.state.paused) {
       this.state.buffer.unshift(item);
     } else {
