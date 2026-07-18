@@ -8,9 +8,9 @@
  * way a real in-play desk does. Pure and deterministic given the event
  * sequence, so a replay reproduces every quote, fill, and P&L exactly.
  */
-import { OddsRecord, ScoreRecord, SoccerPhase } from "../feed/types";
+import { OddsRecord, ScoreRecord } from "../feed/types";
 import { MarketView, classifyMarket, modelProbs } from "../model/fair";
-import { MatchState, MatchStateStore, goals, remainingFraction } from "../state/match";
+import { MatchState, MatchStateStore, goals, isLive, remainingFraction } from "../state/match";
 import { OddsStateStore } from "../state/odds";
 import { ModelStore } from "../strategy/context";
 import { planActualOutcome } from "../settle/proofs";
@@ -26,6 +26,11 @@ export interface MmConfig {
   /** When false, the maker quotes naively (no pull/widen) — used to measure
    * exactly how much the adverse-selection protection is worth. */
   protectionEnabled: boolean;
+  /** Reprice cadence in match-clock ms. Real makers refresh quotes on an
+   * interval (plus immediately on events), not on every raw tick — this is
+   * both realistic and keeps the compute bounded. Deterministic: keyed off
+   * the feed's own timestamps. */
+  repriceIntervalMs: number;
 }
 
 export const DEFAULT_MM_CONFIG: MmConfig = {
@@ -33,6 +38,7 @@ export const DEFAULT_MM_CONFIG: MmConfig = {
   adverse: DEFAULT_ADVERSE_PARAMS,
   flow: DEFAULT_FLOW_PARAMS,
   protectionEnabled: true,
+  repriceIntervalMs: 2_000,
 };
 
 export interface QuoteSnapshot {
@@ -61,6 +67,10 @@ export interface MmStats {
   informedFilled: number;
 }
 
+/** Pre-match model-fit cadence (match-clock ms) — coarse, since we only need
+ * the λ model warm by kickoff, not a live quote. */
+const PREMATCH_REFIT_MS = 20_000;
+
 const buildViews = (odds: ReturnType<OddsStateStore["get"]>): Map<string, MarketView> => {
   const views = new Map<string, MarketView>();
   if (!odds) return views;
@@ -70,20 +80,6 @@ const buildViews = (odds: ReturnType<OddsStateStore["get"]>): Map<string, Market
   }
   return views;
 };
-
-/** A NotStarted pseudo-state so we can price a fixture before its first
- * score record arrives (identical pattern to the strategy layer). */
-function pseudoState(fixtureId: number, nowTs: number): MatchState {
-  return {
-    fixtureId,
-    lastSeq: 0,
-    lastTs: nowTs,
-    phase: SoccerPhase.NotStarted,
-    phaseChangedAtTs: nowTs,
-    stats: {},
-    finalised: false,
-  };
-}
 
 export class MarketMakerEngine {
   readonly book = new MakerBook();
@@ -100,6 +96,7 @@ export class MarketMakerEngine {
   private oddsStore = new OddsStateStore();
   private modelStore = new ModelStore();
   private lastEventTs = new Map<number, number>();
+  private lastRepriceTs = new Map<number, number>();
   private lastFair = new Map<string, number>();
   private tickCount = new Map<string, number>();
   private meta = new Map<string, OutcomeMeta>();
@@ -127,20 +124,33 @@ export class MarketMakerEngine {
     if (delta.becameFinal) this.settleFixture(record.fixtureId, delta.state);
   }
 
-  /** Feed an odds record: refresh quotes and fill any noise flow. */
+  /** Feed an odds record: refresh quotes and fill any noise flow. This is an
+   * IN-PLAY maker, so it only quotes once the match is live; pre-match it just
+   * keeps the λ model fitted (on a coarse cadence). Repricing is throttled to
+   * the configured cadence — the odds store still absorbs every tick, so
+   * quotes always price off the freshest data. Deterministic (keyed on the
+   * feed's timestamps). */
   processOdds(record: OddsRecord): void {
     this.oddsStore.apply(record);
     const fixtureId = record.fixtureId;
+    const nowTs = record.ts;
+    const matchOpt = this.matchStore.get(fixtureId);
+    const live = matchOpt ? isLive(matchOpt) : false;
+
+    // Quote actively in-play; pre-match only refit the model, and coarsely.
+    const interval = live ? this.cfg.repriceIntervalMs : PREMATCH_REFIT_MS;
+    const lastReprice = this.lastRepriceTs.get(fixtureId);
+    if (lastReprice !== undefined && nowTs - lastReprice < interval) return;
+    this.lastRepriceTs.set(fixtureId, nowTs);
+
     const odds = this.oddsStore.get(fixtureId);
     if (!odds) return;
-    const matchOpt = this.matchStore.get(fixtureId);
     const views = buildViews(odds);
     if (views.size === 0) return;
-    const nowTs = record.ts;
     const model = this.modelStore.maybeRefit(fixtureId, views, matchOpt, nowTs);
     if (!model) return;
-    const match = matchOpt ?? pseudoState(fixtureId, nowTs);
-    if (match.finalised) return;
+    if (!live) return; // pre-match: model kept warm, no quotes yet
+    const match = matchOpt!;
 
     const protection = protectionFor(this.lastEventTs.get(fixtureId) ?? null, nowTs, this.cfg.adverse);
     const remaining = remainingFraction(match, nowTs);
