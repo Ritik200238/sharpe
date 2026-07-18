@@ -160,11 +160,18 @@ npm install
 
 # replay a match through the full pipeline (no credentials needed)
 npx tsx services/agent/tools/synthesize.ts
-npm run replay --workspace services/agent -- --replay-dir data/synthetic
+npx tsx services/agent/src/main.ts --mode replay --replay-dir data/synthetic
 
-# watch it think
-open http://localhost:8787            # live dashboard
+# watch it think (run from repo root; the maker + directional both replay)
+#   → open http://localhost:8787 in a browser for the live dashboard
 curl -N localhost:8787/stream         # the brain feed, raw SSE
+curl -s  localhost:8787/mm            # the market maker's live book
+```
+
+Or reproduce the market-maker's headline numbers in ~6 seconds:
+
+```bash
+npm run mm-validate --workspace services/agent   # protection ON vs OFF → the +23 USDC defence
 ```
 
 With TxLINE credentials (one-time, ~1 min — a devnet wallet self-subscribes on-chain, free tier):
