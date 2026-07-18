@@ -1,15 +1,20 @@
 /**
  * Capture a full set of API-shaped fixtures for the frontend's self-contained
- * DEMO mode. Runs a deterministic synthetic match through the REAL agent
- * pipeline (session-less, so paper settlements book without a live proof), then
- * writes every endpoint's response to `apps/web/public/demo/*.json`.
+ * DEMO mode. Runs a match through the REAL agent pipeline and writes every
+ * endpoint's response to `apps/web/public/demo/*.json`.
  *
  * The deployed GitHub Pages site (no backend configured) loads these fixtures,
  * so anyone opening the public URL sees the real product — market-making book,
- * ledger, performance, self-reviews — fully populated, with zero hosting.
+ * ledger, performance digest, self-reviews — fully populated, with zero hosting.
+ *
+ * Two modes:
+ *   npx tsx tools/capture-demo.ts <recording-dir>   REAL match: loads the live
+ *       session + wallet so settlements carry a real validateStatV2 proof.
+ *   npx tsx tools/capture-demo.ts                    synthetic match (session-
+ *       less, recent kickoff) — a fallback when no real recording is available.
  *
  * Run with a throwaway track dir so it never touches real data:
- *   SHARPE_TRACK_DIR=<tmp> npx tsx tools/capture-demo.ts
+ *   SHARPE_TRACK_DIR=<tmp> npx tsx tools/capture-demo.ts <dir>
  */
 import * as fs from "node:fs";
 import * as os from "node:os";
@@ -17,6 +22,8 @@ import * as path from "node:path";
 import { Agent } from "../src/agent";
 import { ReplayFeed } from "../src/feed/replay";
 import { loadAgentConfig } from "../src/platform/config";
+import { AuthSession, loadCredentials } from "../src/platform/auth";
+import { loadAgentWallet } from "../src/exec/commit";
 import { synthesizeMatch, writeJournals } from "./synthesize";
 
 const OUT = path.resolve(__dirname, "..", "..", "..", "apps", "web", "public", "demo");
@@ -27,29 +34,51 @@ function write(slug: string, value: unknown): void {
 }
 
 async function main(): Promise<void> {
-  const replayDir = fs.mkdtempSync(path.join(os.tmpdir(), "sharpe-demo-replay-"));
-  // Kick off ~105 min ago so the fixtures read as a match that just finished —
-  // recent relative times, and inside the 7/30-day digest windows.
-  const kickoff = Date.now() - 105 * 60_000;
-  writeJournals(replayDir, synthesizeMatch(42, 90000001, kickoff));
-
   const cfg = {
     ...loadAgentConfig(["--network", "devnet", "--mode", "replay", "--exec", "paper"]),
-    replayDir,
     replaySpeed: 0,
     bankrollUsdc: 2000,
     mmEnabled: true,
   };
 
-  // session=null + wallet=null → no validator, no committer: paper settlements
-  // book directly (the synthetic fixture isn't a real TxLINE stat to prove).
-  const agent = new Agent(cfg, new ReplayFeed(replayDir, 0), null, null, () => {});
+  const arg = process.argv[2];
+  let replayDir: string;
+  let cleanup = (): void => {};
+  let session: AuthSession | null = null;
+  let wallet = null;
+
+  if (arg) {
+    // REAL match: use the live session + wallet so validateStatV2 runs and
+    // settlements carry a real on-chain proof.
+    replayDir = arg;
+    const creds = loadCredentials(cfg.network.network);
+    if (creds?.apiToken) session = new AuthSession(cfg.network, creds.jwt, creds.apiToken);
+    try {
+      wallet = loadAgentWallet(cfg.network.network);
+    } catch {
+      /* no wallet — validator still runs read-only if session present */
+    }
+    console.log(
+      `[capture-demo] REAL match ${path.basename(replayDir)} · validator ${
+        session ? "ON (validateStatV2)" : "OFF"
+      }`,
+    );
+  } else {
+    // Synthetic fallback: session-less so paper settlements book, recent
+    // kickoff so relative times + digest windows stay sensible.
+    replayDir = fs.mkdtempSync(path.join(os.tmpdir(), "sharpe-demo-replay-"));
+    writeJournals(replayDir, synthesizeMatch(42, 90000001, Date.now() - 105 * 60_000));
+    cleanup = () => fs.rmSync(replayDir, { recursive: true, force: true });
+    console.log("[capture-demo] synthetic match (session-less)");
+  }
+
+  cfg.replayDir = replayDir;
+  const agent = new Agent(cfg, new ReplayFeed(replayDir, 0), session, wallet, () => {});
   await agent.run();
 
   fs.mkdirSync(OUT, { recursive: true });
   console.log("[capture-demo] writing fixtures:");
 
-  // Mirror the exact shapes api/server.ts serves.
   const digest30 = agent.digest(30);
   const flagged = digest30.strategies
     .filter((s) => s.activity !== "active")
@@ -83,10 +112,11 @@ async function main(): Promise<void> {
     reviews: agent.reviews(),
   });
 
-  fs.rmSync(replayDir, { recursive: true, force: true });
+  cleanup();
+  const verified = agent.settlements().filter((s) => s.verification?.verified).length;
   console.log(
-    `[capture-demo] done — ${status.aggregates.decisions} decisions, ${status.aggregates.settled} settled, ` +
-      `mm net ${status.mm?.netUsdc} USDC`,
+    `[capture-demo] done — ${status.aggregates.decisions} decisions, ${status.aggregates.settled} settled ` +
+      `(${verified} on-chain-verified), mm net ${status.mm?.netUsdc} USDC`,
   );
 }
 

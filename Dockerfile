@@ -1,4 +1,4 @@
-# SHARPE agent — the always-on half (the frontend deploys to Vercel separately).
+# SHARPE agent — the always-on half (the frontend deploys to GitHub Pages separately).
 # Build:  docker build -t sharpe-agent .
 # Run:    docker run -d --name sharpe -p 8787:8787 \
 #           -v sharpe-keys:/app/_keys -v sharpe-data:/app/data sharpe-agent

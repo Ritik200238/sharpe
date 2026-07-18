@@ -95,8 +95,10 @@ export function Command() {
       ) : null}
 
       <div className="research-caption">
-        Directional research layer (paper) — the fair-value engine the maker prices off. We
-        measured directional trading at −18.6% ROI; that's why the job is market-making.
+        Directional research layer (paper) — the fair-value engine the maker prices off. This one
+        demonstration match happened to profit, but across 20 real matches directional trading
+        loses <strong>−18.6% ROI</strong> (you can't beat TxLINE's de-margined consensus) — which
+        is exactly why SHARPE's job is market-making, not betting.
       </div>
 
       <div className="vitals-grid">

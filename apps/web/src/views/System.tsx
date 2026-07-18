@@ -66,7 +66,7 @@ export function System() {
         <h2 className="panel-label">Public read-only API — no auth, CORS *</h2>
         <div className="endpoint-list">
           <span>
-            GET /health · /status · /decisions · /positions · /settlements · /reviews ·
+            GET /health · /status · /mm · /decisions · /positions · /settlements · /reviews ·
             /digest?days=30 · /track-record · /stream (SSE)
           </span>
         </div>

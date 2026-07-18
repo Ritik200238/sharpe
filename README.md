@@ -243,8 +243,9 @@ Our devnet subscription is itself on-chain: [`XeNPJG…x6Kxm`](https://explorer.
 
 **Submission package:** the full requirement-by-requirement status, `judge.md` + `CLAUDE.md`
 compliance audit, and API feedback live in **[SUBMISSION.md](SUBMISSION.md)**. The turnkey
-5-minute demo-video script is in **[DEMOVIDEO.md](DEMOVIDEO.md)**; deployment (Vercel
-frontend + Dockerized agent) in **[docs/DEPLOY.md](docs/DEPLOY.md)**.
+5-minute demo-video script is in **[DEMOVIDEO.md](DEMOVIDEO.md)**; deployment (GitHub Pages
+frontend — already live — + Dockerized agent, with Vercel as an alternative) in
+**[docs/DEPLOY.md](docs/DEPLOY.md)**.
 
 ---
 

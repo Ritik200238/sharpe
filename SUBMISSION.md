@@ -26,8 +26,9 @@ structural loser we measured at −18.6% ROI — it provides liquidity *around* 
 | **TxLINE endpoints list** | ✅ done | below |
 | **API feedback** | ✅ done | below |
 
-The two ⏳ items require the operator's own accounts (a screen recording; a Vercel import +
-a rented VPS with a payment method) — everything buildable without those credentials is done.
+The single ⏳ item is the demo video (a screen recording, needs the operator's voice).
+Everything else a judge needs is already live and testable: the self-contained demo URL and
+the verifiable devnet transactions. A 24/7 *live* agent host is an optional enhancement.
 
 ## TxLINE endpoints used
 

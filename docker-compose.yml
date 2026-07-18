@@ -1,4 +1,4 @@
-# SHARPE agent + recorder — the always-on half. (Frontend deploys to Vercel.)
+# SHARPE agent + recorder — the always-on half. (Frontend is live on GitHub Pages.)
 #   docker compose up -d --build
 # One-time TxLINE signup after first boot (funds the devnet wallet):
 #   docker compose exec agent tsx services/recorder/src/cli.ts setup
