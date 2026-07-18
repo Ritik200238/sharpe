@@ -1,0 +1,44 @@
+name: programs
+
+# Builds the on-chain Solana program(s) on Linux, where the Agave/SBF toolchain
+# works cleanly (the maintainer's Windows box lacks the native MSVC toolchain —
+# see programs/README.md). A green run here proves the program compiles; the
+# built .so is uploaded so it can be deployed to devnet with `solana program deploy`.
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - "programs/**"
+      - ".github/workflows/programs.yml"
+  workflow_dispatch:
+
+jobs:
+  build-registry:
+    name: build sharpe-registry (SBF)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Solana (Agave) CLI
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
+
+      - name: Toolchain versions
+        run: |
+          solana --version
+          cargo-build-sbf --version
+
+      - name: Build (cargo build-sbf)
+        working-directory: programs/registry
+        run: cargo build-sbf
+
+      - name: Show build output
+        run: ls -la programs/registry/target/deploy/
+
+      - name: Upload program .so
+        uses: actions/upload-artifact@v4
+        with:
+          name: sharpe-registry-so
+          path: programs/registry/target/deploy/sharpe_registry.so
+          if-no-files-found: error

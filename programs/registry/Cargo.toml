@@ -1,0 +1,17 @@
+[package]
+name = "sharpe-registry"
+version = "0.1.0"
+edition = "2021"
+description = "SHARPE commitment registry — records decision/quote-book hashes on-chain in immutable PDAs"
+license = "MIT"
+
+[dependencies]
+solana-program = "2.1"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[profile.release]
+overflow-checks = true
+lto = "fat"
+codegen-units = 1
