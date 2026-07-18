@@ -73,7 +73,12 @@ async function main(): Promise<void> {
   }
 
   cfg.replayDir = replayDir;
-  const agent = new Agent(cfg, new ReplayFeed(replayDir, 0), session, wallet, () => {});
+  // Log decisions/settlements/reviews as they happen — a progress signal for
+  // the (slow) full real-match replay.
+  const log = (l: string): void => {
+    if (/\[decide\]|\[settle\]|\[review\]/.test(l)) console.log(l);
+  };
+  const agent = new Agent(cfg, new ReplayFeed(replayDir, 0), session, wallet, log);
   await agent.run();
 
   fs.mkdirSync(OUT, { recursive: true });
