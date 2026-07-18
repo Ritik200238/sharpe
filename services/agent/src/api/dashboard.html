@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SHARPE — autonomous sports trading agent</title>
+<title>SHARPE — autonomous in-play market maker</title>
 <style>
   :root {
     --bg: #0b0e13; --panel: #11151d; --line: #1e2530;
@@ -38,15 +38,24 @@
 <body>
 <header>
   <h1>SHARPE<span>▮</span></h1>
-  <div class="tag">the autonomous sports trading agent with an unfakeable public track record</div>
+  <div class="tag">the autonomous in-play market maker — quotes both sides, earns the spread, book you can audit</div>
   <div class="tag" id="phase">connecting…</div>
 </header>
 
-<div class="grid" id="stats"></div>
+<section id="mm-section">
+  <h2>Market making — live book</h2>
+  <div class="grid" id="mm-stats"></div>
+  <div class="feed" id="mm-quotes"><div class="empty">the maker quotes only in-play…</div></div>
+</section>
+
+<section>
+  <h2>Directional research (paper) — fair-value engine · why we make markets instead</h2>
+  <div class="grid" id="stats"></div>
+</section>
 
 <section>
   <h2>Decision feed — the agent thinking out loud</h2>
-  <div class="feed" id="decisions"><div class="empty">waiting for decisions…</div></section>
+  <div class="feed" id="decisions"><div class="empty">waiting for decisions…</div></div>
 </section>
 
 <section>
@@ -55,7 +64,7 @@
 </section>
 
 <footer>
-  read-only api: <a href="/status">/status</a> · <a href="/decisions">/decisions</a> ·
+  read-only api: <a href="/mm">/mm</a> · <a href="/status">/status</a> · <a href="/decisions">/decisions</a> ·
   <a href="/positions">/positions</a> · <a href="/settlements">/settlements</a> ·
   <a href="/reviews">/reviews</a> · <a href="/track-record">/track-record</a> · <a href="/health">/health</a>
 </footer>
@@ -69,16 +78,49 @@ function stat(k, v, cls="") {
   return `<div class="stat"><div class="k">${k}</div><div class="v ${cls}">${v}</div></div>`;
 }
 
+function renderMm(mm) {
+  const sec = $("mm-section");
+  if (!mm || !mm.enabled || !mm.snapshot) {
+    if (!mm || !mm.enabled) sec.style.display = "none";
+    return;
+  }
+  sec.style.display = "";
+  const t = mm.snapshot.totals, s = mm.snapshot.stats;
+  const netCls = t.cashUsdc > 0 ? "pos" : t.cashUsdc < 0 ? "neg" : "";
+  const defended = s.informedDeflected + s.informedFilled;
+  $("mm-stats").innerHTML =
+    stat("net p&l (usdc)", (t.cashUsdc>0?"+":"") + fmt(t.cashUsdc), netCls) +
+    stat("spread captured", (t.spreadCapturedUsdc>0?"+":"") + fmt(t.spreadCapturedUsdc), "pos") +
+    stat("adverse selection", (t.adverseUsdc>0?"+":"") + fmt(t.adverseUsdc), t.adverseUsdc<0?"neg":"") +
+    stat("toxic flow deflected", `${fmt(s.informedDeflected,0)}/${fmt(defended,0)}`, s.informedFilled>0?"warn":"pos") +
+    stat("fills · volume", `${fmt(t.fills,0)} · ${fmt(t.volumeShares,0)} sh`) +
+    stat("live quotes", fmt(mm.snapshot.quotes.length,0));
+  const q = mm.snapshot.quotes;
+  $("mm-quotes").innerHTML = q.length ? q.map(x => `
+    <div class="row">
+      <b>${x.outcomeName.toUpperCase()}</b> <span class="meta">${x.marketKey}</span>
+      &nbsp; <span class="neg">bid ${(x.bidProb*100).toFixed(1)}%</span>
+      · fair ${(x.fairProb*100).toFixed(1)}%
+      · <span class="pos">ask ${(x.askProb*100).toFixed(1)}%</span>
+      · spread ${((x.askProb-x.bidProb)*100).toFixed(1)}pp
+      · inv ${x.inventory>0?"+":""}${x.inventory}
+      ${x.widened ? '· <span class="warn">WIDENED</span>' : ""}
+    </div>`).join("") : '<div class="empty">no live quotes — a match must be in-play</div>';
+}
+
 async function tick() {
   try {
-    const [health, status, decisions, settlements] = await Promise.all([
+    const [health, status, decisions, settlements, mm] = await Promise.all([
       fetch("/health").then(r=>r.json()),
       fetch("/status").then(r=>r.json()),
       fetch("/decisions?limit=30").then(r=>r.json()),
       fetch("/settlements").then(r=>r.json()),
+      fetch("/mm").then(r=>r.json()).catch(()=>({enabled:false})),
     ]);
 
     $("phase").textContent = `${health.phase} · up ${fmt(health.uptimeSec,0)}s`;
+
+    renderMm(mm);
 
     if (status.aggregates) {
       const a = status.aggregates;
@@ -126,7 +168,7 @@ tick();
 let pollMs = 10000;
 try {
   const es = new EventSource("/stream");
-  for (const type of ["decision", "settlement", "review", "status"]) {
+  for (const type of ["decision", "settlement", "review", "status", "mm_fill", "mm_book"]) {
     es.addEventListener(type, () => tick()); // poll-on-push keeps one render path
   }
   es.onerror = () => { pollMs = 2000; }; // stream down → fast polling
