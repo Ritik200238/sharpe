@@ -17,7 +17,7 @@ structural loser we measured at −18.6% ROI — it provides liquidity *around* 
 | Requirement | Status | Where |
 |---|---|---|
 | **Public GitHub repo** | ✅ done | https://github.com/Ritik200238/sharpe |
-| **Working build (not a concept)** | ✅ done | 46 tests green; agent runs live on devnet; frontend builds |
+| **Working build (not a concept)** | ✅ done | 49 tests green; agent runs live on devnet; frontend builds |
 | **TxLINE as primary data source** | ✅ done | live SSE scores+odds, historical backfill, settlement proofs (list below) |
 | **Solana signup** | ✅ done | on-chain free-tier subscription tx `XeNPJG…x6Kxm` (devnet) |
 | **Demo video (≤5 min)** | ⏳ **operator action** | turnkey shot-by-shot script in `DEMOVIDEO.md` — ~20 min to record |
@@ -42,6 +42,21 @@ a rented VPS with a payment method) — everything buildable without those crede
 | Settlement proofs | `GET /api/scores/stat-validation?fixtureId&seq&statKeys` |
 | On-chain verification | `validateStatV2` — TxLINE program (devnet `6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J`) |
 
+## On-chain proof it ACTS (verifiable now, devnet)
+
+The agent's wallet is `CeUgBttcgRqAH1He876VBbA2PgUCMkU9Nnq2DqVEy9rk`. In chain mode it
+signs and lands a Solana transaction for every commitment it makes — decisions, settlements,
+and the **market maker's quote-book snapshots** — before the outcome exists. Live examples you
+can open right now:
+
+- **Quote-book snapshot** (the maker's on-chain book — the "proof of quotes"): memo
+  `sharpe:v1:quote_book:85535b3d…` →
+  [`5ba75L2uqVcv…Cs95f`](https://explorer.solana.com/tx/5ba75L2uqVcvSwxomL8BfLFK46xLXXn5zY4wbNJUAwPYuf4E9qppHWK8hn7mzzfBRdCk1WcDwFpmQa25yNNCs95f?cluster=devnet)
+- **Decision commitment**: memo `sharpe:v1:decision:743d75e0…` →
+  [`45Mg4ZWZPS4t…hrEm6U`](https://explorer.solana.com/tx/45Mg4ZWZPS4tynLA1NoFh2uvKdiQFwkUqPZVKxTuW5pfckZ3eM2ZBosNVvz2Bq9pCN8wnhTYMC12CzEyz1hrEm6U?cluster=devnet)
+- **Subscription** (TxLINE data activation): →
+  [`XeNPJGSyBW9X…6Kxm`](https://explorer.solana.com/tx/XeNPJGSyBW9XUVXiPTqjsPMyWCBUgy3BwwNB1eRHn7bZiiviCejQLoMfFZMrgra94E5uk4PLcnBsZioeoax6Kxm?cluster=devnet)
+
 ## API feedback (for the submission form)
 
 **Loved:** the `llms.txt` docs index made onboarding fast; the runnable devnet examples repo
@@ -65,7 +80,7 @@ a *final* stat vs an in-running one is subtle.
 |---|---|---|
 | 1 | **Core Functionality & Data Ingestion** | Dual live SSE ingestion + raw-fidelity journals + replay-identical pipeline; a **20-match real World Cup corpus**; runs live on devnet right now. |
 | 2 | **Autonomous Operation** | One command → discovers fixtures, prices fair value, **quotes both sides**, fills flow, defends around goals, commits, settles, and self-recovers from crashes. Zero human input after start (config at deploy only). |
-| 3 | **Logic & Code Architecture** | Deterministic glass-box: every quote carries its math (fair value, spread, inventory skew, protection phase) + a plain-English reason; bit-for-bit determinism proven by test (and confirmed identical across independent real-data runs); 46 tests; frozen decision-path discipline. |
+| 3 | **Logic & Code Architecture** | Deterministic glass-box: every quote carries its math (fair value, spread, inventory skew, protection phase) + a plain-English reason; bit-for-bit determinism proven by test (and confirmed identical across independent real-data runs); 49 tests; frozen decision-path discipline. |
 | 4 | **Innovation & Novelty** | An in-play **market maker with an adverse-selection defence** (pull-then-widen around goals, measured to turn a −7 loss into a +16 profit) whose whole book is **committed on-chain before outcomes exist** and settled by Merkle proof — a liquidity provider you can *audit*. Not a feed reskin, not a GPT wrapper, not another doomed attempt to out-predict the consensus. |
 | 5 | **Production Readiness** | Write-ahead commit journal + boot reconcile, full state rebuilt from ledger on `kill -9`, self-healing feeds, inventory + exposure caps, Docker deploy, live 24/7. |
 
@@ -87,9 +102,10 @@ and produces the one thing money can't currently buy: a track record that can't 
 | **Public repo + clean docs + endpoints list** | ✅ |
 
 **CLAUDE.md Solana ladder:** at the **Competitive→Winning** line — the agent autonomously
-signs Solana transactions to record decisions AND self-verifies outcomes trustlessly via
-`validateStatV2`. The full escrow/vault execution loop is scoped roadmap (`programs/README.md`),
-honestly deferred rather than shipped half-baked (per the "nothing half-baked" law).
+signs Solana transactions to record decisions **and its market-maker quote book** (verified
+landing on devnet, links above) AND self-verifies outcomes trustlessly via `validateStatV2`.
+The full escrow/vault execution loop is scoped roadmap (`programs/README.md`), honestly deferred
+rather than shipped half-baked (per the "nothing half-baked" law).
 
 **CLAUDE.md don'ts — none committed:** not a GPT-wrapper narrator; not manual; not a static
 pull; not a black box; UI did not eat the substance; TxL token never used for positions
@@ -102,8 +118,9 @@ pull; not a black box; UI did not eat the substance; TxL token never used for po
 pull/widen defence, deterministic fill model, P&L book) validated ON vs OFF (−7 → +16 USDC,
 protection worth +23) · intelligence layer (calibration, UCB allocation, SPRT self-suspension,
 self-reviews) · risk engine · append-only track record · on-chain commitments (write-ahead +
-reconcile) · `validateStatV2` settlement proven on a real semifinal · 46 tests (incl. 10 MM) ·
-TxLINE signup + 20-match corpus · production frontend (all 7 views, browser-verified) ·
+reconcile) — **decisions AND quote-book snapshots verified landing on devnet** (links above) ·
+`validateStatV2` settlement proven on a real semifinal · 49 tests (incl. 13 MM) ·
+TxLINE signup + 20-match corpus · production frontend (Market Making + 7 views, browser-verified) ·
 Docker/Vercel deploy configs · backtest harness with an honest tuning progression. *(The
 measured −18.6% ROI of directional trading is exactly why the job is market-making — see
 `docs/MARKET-MAKING.md`.)*

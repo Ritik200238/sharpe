@@ -106,6 +106,16 @@ export function About() {
             XeNPJGSyBW9X…6Kxm ↗
           </a>
         </div>
+        <div className="row2">
+          quote-book commit (<code className="inline-code bare">sharpe:v1:quote_book:…</code>):{" "}
+          <a
+            href="https://explorer.solana.com/tx/5ba75L2uqVcvSwxomL8BfLFK46xLXXn5zY4wbNJUAwPYuf4E9qppHWK8hn7mzzfBRdCk1WcDwFpmQa25yNNCs95f?cluster=devnet"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            5ba75L2uqVcv…Cs95f ↗
+          </a>
+        </div>
       </div>
 
       <h2 className="about-label">Honest limits</h2>

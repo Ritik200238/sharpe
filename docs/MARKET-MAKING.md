@@ -78,6 +78,16 @@ quoting, protection, fills, and settlement, plus 3 that drive a full match throu
 agent.) `npm run mm-backtest --workspace services/agent` runs the same over the real recorded
 corpus — but real journals are large, so it takes minutes; bound it with `-- --matches N`.
 
+## The book is provable on-chain
+
+In chain mode the maker commits the **canonical hash of its live book** to Solana on a cadence
+and at settlement (`src/agent.ts` → `maybeCommitMmBook`, memo `sharpe:v1:quote_book:<hash>`),
+before outcomes exist. Anyone can recompute the hash from the published snapshot and find it
+on-chain — the book cannot be backdated or edited. A real example landed on devnet:
+[`5ba75L2uqVcv…Cs95f`](https://explorer.solana.com/tx/5ba75L2uqVcvSwxomL8BfLFK46xLXXn5zY4wbNJUAwPYuf4E9qppHWK8hn7mzzfBRdCk1WcDwFpmQa25yNNCs95f?cluster=devnet)
+(memo `sharpe:v1:quote_book:85535b3d…`). This rides the same write-ahead-journalled committer
+the decision/settlement commitments use, so a crash mid-commit never orphans or drops a snapshot.
+
 ## Why not directional trading
 
 For the record, we built and measured the directional agent first (it still lives in
