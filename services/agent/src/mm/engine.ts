@@ -51,6 +51,54 @@ export interface QuoteSnapshot {
   ts: number;
 }
 
+/** A single trade the maker filled — emitted live so the agent can journal it,
+ * stream it, and rebuild the book after a restart. */
+export interface MakerFill {
+  fixtureId: number;
+  marketKey: string;
+  outcomeIndex: number;
+  outcomeName: string;
+  /** The taker's side: "buy" = it lifted our ask; "sell" = it hit our bid. */
+  side: "buy" | "sell";
+  shares: number;
+  /** The probability the taker actually traded at (our ask or bid). */
+  priceProb: number;
+  fairProb: number;
+  informed: boolean;
+  ts: number;
+}
+
+/** Optional live hooks — undefined in the backtest/tests, so engine behaviour
+ * is byte-identical there; the live agent supplies them to persist + stream. */
+export interface MmHooks {
+  onFill?: (fill: MakerFill) => void;
+}
+
+/** One live two-sided quote, flattened for the API + on-chain commit. */
+export interface QuoteLine {
+  fixtureId: number;
+  marketKey: string;
+  outcomeIndex: number;
+  outcomeName: string;
+  bidProb: number;
+  askProb: number;
+  fairProb: number;
+  halfSpread: number;
+  skew: number;
+  widened: boolean;
+  inventory: number;
+  ts: number;
+}
+
+/** A deterministic snapshot of the maker's book + live quotes. Canonically
+ * hashable → committed on-chain (kind "quote_book") as tamper-proof evidence
+ * of exactly what the maker was quoting, and served to the dashboard. */
+export interface MmSnapshot {
+  totals: ReturnType<MakerBook["totals"]>;
+  stats: MmStats;
+  quotes: QuoteLine[];
+}
+
 interface OutcomeMeta {
   fixtureId: number;
   family: MarketView["family"];
@@ -103,10 +151,43 @@ export class MarketMakerEngine {
   private quotes = new Map<string, QuoteSnapshot>();
   private settled = new Set<number>();
 
-  constructor(private readonly cfg: MmConfig = DEFAULT_MM_CONFIG) {}
+  constructor(
+    private readonly cfg: MmConfig = DEFAULT_MM_CONFIG,
+    private readonly hooks: MmHooks = {},
+  ) {}
 
   liveQuotes(): QuoteSnapshot[] {
     return [...this.quotes.values()];
+  }
+
+  /** Deterministic snapshot of the book + live quotes (sorted), for the API
+   * and the on-chain quote-book commitment. Pulled (withdrawn) quotes are
+   * excluded — a quote that isn't live isn't part of the book. */
+  snapshot(): MmSnapshot {
+    const quotes: QuoteLine[] = [];
+    for (const q of this.quotes.values()) {
+      if (q.pulled) continue;
+      quotes.push({
+        fixtureId: q.fixtureId,
+        marketKey: q.marketKey,
+        outcomeIndex: q.outcomeIndex,
+        outcomeName: q.outcomeName,
+        bidProb: q.quote.bidProb,
+        askProb: q.quote.askProb,
+        fairProb: q.quote.fairProb,
+        halfSpread: q.quote.halfSpread,
+        skew: q.quote.skew,
+        widened: q.quote.widened,
+        inventory: this.book.inventoryOf(this.key(q.fixtureId, q.marketKey, q.outcomeIndex)),
+        ts: q.ts,
+      });
+    }
+    quotes.sort((a, b) =>
+      a.fixtureId - b.fixtureId ||
+      (a.marketKey < b.marketKey ? -1 : a.marketKey > b.marketKey ? 1 : 0) ||
+      a.outcomeIndex - b.outcomeIndex,
+    );
+    return { totals: this.book.totals(), stats: { ...this.stats }, quotes };
   }
 
   private key(fixtureId: number, marketKey: string, i: number): string {
@@ -189,7 +270,14 @@ export class MarketMakerEngine {
         const t = (this.tickCount.get(key) ?? 0) + 1;
         this.tickCount.set(key, t);
         const taker = sampleNoise(`${key}:${t}`, this.cfg.flow);
-        if (taker) this.fill(key, quote, fair, taker);
+        if (taker)
+          this.fill(key, quote, fair, taker, {
+            fixtureId,
+            marketKey,
+            outcomeIndex: i,
+            outcomeName: view.outcomes[i],
+            ts: nowTs,
+          });
       }
     }
   }
@@ -227,18 +315,43 @@ export class MarketMakerEngine {
         const inventory = this.book.inventoryOf(key);
         const staleQuote = makeQuote(oldFair, remaining, inventory, false, this.cfg.quote);
         this.stats.informedFilled += 1;
-        this.fill(key, staleQuote, newFair, taker);
+        this.fill(key, staleQuote, newFair, taker, {
+          fixtureId,
+          marketKey,
+          outcomeIndex: i,
+          outcomeName: view.outcomes[i],
+          ts,
+        });
         this.lastFair.set(key, newFair);
       }
     }
   }
 
-  private fill(key: string, quote: Quote, fair: number, taker: Taker): void {
+  private fill(
+    key: string,
+    quote: Quote,
+    fair: number,
+    taker: Taker,
+    ctx: { fixtureId: number; marketKey: string; outcomeIndex: number; outcomeName: string; ts: number },
+  ): void {
+    const priceProb = taker.side === "buy" ? quote.askProb : quote.bidProb;
     if (taker.side === "buy") {
       this.book.fillBuy(key, quote.askProb, fair, taker.shares, taker.informed);
     } else {
       this.book.fillSell(key, quote.bidProb, fair, taker.shares, taker.informed);
     }
+    this.hooks.onFill?.({
+      fixtureId: ctx.fixtureId,
+      marketKey: ctx.marketKey,
+      outcomeIndex: ctx.outcomeIndex,
+      outcomeName: ctx.outcomeName,
+      side: taker.side,
+      shares: taker.shares,
+      priceProb,
+      fairProb: fair,
+      informed: taker.informed,
+      ts: ctx.ts,
+    });
   }
 
   private settleFixture(fixtureId: number, state: MatchState): void {

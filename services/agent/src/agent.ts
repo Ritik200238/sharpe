@@ -1,5 +1,5 @@
 import { Connection, Keypair } from "@solana/web3.js";
-import { FeedEvent, FeedSource, ScoreRecord } from "./feed/types";
+import { FeedEvent, FeedSource, OddsRecord, ScoreRecord } from "./feed/types";
 import { AllocationEngine } from "./intelligence/allocation";
 import { CalibrationTracker } from "./intelligence/calibration";
 import { buildMatchReview } from "./intelligence/review";
@@ -18,8 +18,32 @@ import { TrackStore } from "./track/store";
 import { ChainCommitter } from "./exec/commit";
 import { brainStream } from "./api/stream";
 import { Digest, buildDigest } from "./intelligence/digest";
+import { DEFAULT_MM_CONFIG, MakerFill, MarketMakerEngine, MmSnapshot } from "./mm/engine";
+import { canonicalJson } from "./strategy/types";
+import * as crypto from "node:crypto";
+import * as fs from "node:fs";
+import * as path from "node:path";
 
 const STRATEGIES: StrategyId[] = ["S1_COHERENCE", "S2_REACTION", "S3_CONVERGENCE"];
+
+/** Stream the live book at most this often (match-clock ms) — the maker
+ * reprices far faster than a dashboard needs to redraw. */
+const MM_BOOK_PUBLISH_MS = 2_000;
+/** Commit the quote-book snapshot on-chain at most this often (match-clock
+ * ms), plus always at settlement — a steady tamper-proof trail without
+ * flooding the chain with a tx per reprice. */
+const MM_BOOK_COMMIT_MS = 600_000;
+/** Bound the in-memory fill/commit tails the API serves. */
+const MM_FILL_TAIL = 60;
+const MM_COMMIT_TAIL = 50;
+
+/** What the maker exposes to the API + dashboard. */
+export interface MmAgentStatus {
+  enabled: boolean;
+  snapshot: MmSnapshot | null;
+  recentFills: MakerFill[];
+  bookCommits: Array<{ ts: number; hash: string; sig?: string }>;
+}
 
 export interface AgentStatus {
   startedAtTs: number;
@@ -39,6 +63,17 @@ export interface AgentStatus {
   suspensions: Record<string, unknown>;
   aggregates: ReturnType<TrackStore["aggregates"]>;
   recentVetoes: Array<{ reason: string; strategy: string; marketKey: string; ts: number }>;
+  /** Compact market-maker headline for the dashboard (full detail at /mm). */
+  mm: {
+    enabled: boolean;
+    netUsdc: number;
+    spreadCapturedUsdc: number;
+    adverseUsdc: number;
+    fills: number;
+    liveQuotes: number;
+    informedDeflected: number;
+    openInventoryAbs: number;
+  } | null;
 }
 
 /**
@@ -64,6 +99,17 @@ export class Agent {
   private recentVetoes: AgentStatus["recentVetoes"] = [];
   private startedAtTs = Date.now();
   private settling = new Set<number>();
+
+  // Market maker — SHARPE's primary job. Runs alongside the loop, priced off
+  // the same live feed; the directional path stays for research + fair value.
+  private mm: MarketMakerEngine | null = null;
+  private mmFills: MakerFill[] = [];
+  private mmBookCommits: Array<{ ts: number; hash: string; sig?: string }> = [];
+  private lastMmBookPublishTs = 0;
+  private lastMmBookCommitTs = 0;
+  private lastMmBookHash: string | null = null;
+  private makerFillFile: string | null = null;
+  private makerCommitFile: string | null = null;
 
   constructor(
     private readonly cfg: AgentConfig,
@@ -135,6 +181,13 @@ export class Agent {
         : null;
     }
 
+    if (cfg.mmEnabled) {
+      this.mm = new MarketMakerEngine(DEFAULT_MM_CONFIG, {
+        onFill: (fill) => this.onMakerFill(fill),
+      });
+      this.makerFillFile = path.join(this.track.dir, "maker-fills.ndjson");
+      this.makerCommitFile = path.join(this.track.dir, "maker-commits.ndjson");
+    }
   }
 
   status(): AgentStatus {
@@ -158,6 +211,38 @@ export class Agent {
       suspensions: this.suspension.snapshot(),
       aggregates: this.track.aggregates(),
       recentVetoes: this.recentVetoes.slice(-20),
+      mm: this.mmSummary(),
+    };
+  }
+
+  private mmSummary(): AgentStatus["mm"] {
+    if (!this.mm) return null;
+    const t = this.mm.book.totals();
+    const s = this.mm.stats;
+    return {
+      enabled: true,
+      netUsdc: t.cashUsdc,
+      spreadCapturedUsdc: t.spreadCapturedUsdc,
+      adverseUsdc: t.adverseUsdc,
+      fills: t.fills,
+      liveQuotes: this.mm.liveQuotes().filter((q) => !q.pulled).length,
+      informedDeflected: s.informedDeflected,
+      openInventoryAbs: t.openInventoryAbs,
+    };
+  }
+
+  /** Full maker detail for the /mm endpoint + the dashboard's market-making
+   * view: the live book snapshot, recent fills, and the on-chain quote-book
+   * commitments. */
+  mmStatus(): MmAgentStatus {
+    if (!this.mm) {
+      return { enabled: false, snapshot: null, recentFills: [], bookCommits: [] };
+    }
+    return {
+      enabled: true,
+      snapshot: this.mm.snapshot(),
+      recentFills: this.mmFills.slice(-MM_FILL_TAIL).reverse(),
+      bookCommits: this.mmBookCommits.slice(-MM_COMMIT_TAIL).reverse(),
     };
   }
 
@@ -229,6 +314,7 @@ export class Agent {
         { type: "odds", record: event.record },
         event.recvTs,
       );
+      this.feedMakerOdds(event.record);
       return;
     }
 
@@ -256,6 +342,113 @@ export class Agent {
       // Retry path: a proof that failed at first finalisation gets another
       // attempt on any later record for the fixture.
       await this.settleFixture(event.record.fixtureId, event.record);
+    }
+    this.feedMakerScore(event.record, delta.becameFinal);
+  }
+
+  // ── Market maker (SHARPE's primary job) ────────────────────────────────
+  // The maker rides the same feed: it prices, quotes both sides, fills flow,
+  // defends around goals, and settles its inventory — all deterministically.
+  // Its state is isolated from the directional path (own stores), so it can
+  // never perturb settlement or the track record.
+
+  private feedMakerOdds(record: OddsRecord): void {
+    if (!this.mm) return;
+    try {
+      this.mm.processOdds(record);
+    } catch (error: any) {
+      this.log(`[mm] odds error (contained): ${error?.message ?? error}`);
+      return;
+    }
+    this.publishMmBook(record.ts, false);
+    this.maybeCommitMmBook(record.ts, false);
+  }
+
+  private feedMakerScore(record: ScoreRecord, becameFinal: boolean): void {
+    if (!this.mm) return;
+    try {
+      this.mm.processScore(record);
+    } catch (error: any) {
+      this.log(`[mm] score error (contained): ${error?.message ?? error}`);
+      return;
+    }
+    if (becameFinal) {
+      // The book just settled for this fixture — snapshot it and anchor the
+      // final state on-chain.
+      this.publishMmBook(record.ts, true);
+      this.maybeCommitMmBook(record.ts, true);
+    }
+  }
+
+  private onMakerFill(fill: MakerFill): void {
+    this.mmFills.push(fill);
+    if (this.mmFills.length > 400) this.mmFills.shift();
+    this.appendMaker(this.makerFillFile, fill);
+    brainStream.publish("mm_fill", fill.ts, fill);
+    // Informed fills are the toxic flow that slipped past the defence — rare
+    // and worth logging. Noise fills (the maker's bread and butter) stay
+    // stream-only so the log doesn't drown.
+    if (fill.informed) {
+      this.log(
+        `[mm] adverse fill: taker ${fill.side} ${fill.shares} ${fill.outcomeName.toUpperCase()} ` +
+          `@ ${fill.priceProb.toFixed(3)} vs fair ${fill.fairProb.toFixed(3)} (${fill.marketKey})`,
+      );
+    }
+  }
+
+  /** Stream the live book, throttled — clients redraw far slower than the
+   * maker reprices. `force` bypasses the throttle at settlement. */
+  private publishMmBook(ts: number, force: boolean): void {
+    if (!this.mm) return;
+    if (!force && ts - this.lastMmBookPublishTs < MM_BOOK_PUBLISH_MS) return;
+    this.lastMmBookPublishTs = ts;
+    const snap = this.mm.snapshot();
+    brainStream.publish("mm_book", ts, {
+      totals: snap.totals,
+      stats: snap.stats,
+      quoteCount: snap.quotes.length,
+    });
+  }
+
+  /** Commit the canonical quote-book hash on-chain — tamper-proof evidence of
+   * exactly what the maker was quoting, timestamped before outcomes exist.
+   * Throttled by match-clock (or forced at settlement); identical consecutive
+   * snapshots are skipped so an idle book never spams the chain. */
+  private maybeCommitMmBook(ts: number, force: boolean): void {
+    if (!this.mm) return;
+    if (!force && ts - this.lastMmBookCommitTs < MM_BOOK_COMMIT_MS) return;
+    const snap = this.mm.snapshot();
+    if (snap.quotes.length === 0 && !force) return;
+    const hash = crypto
+      .createHash("sha256")
+      .update(canonicalJson({ ts, quotes: snap.quotes, totals: snap.totals }))
+      .digest("hex");
+    if (hash === this.lastMmBookHash) return;
+    this.lastMmBookHash = hash;
+    this.lastMmBookCommitTs = ts;
+    const entry: { ts: number; hash: string; sig?: string } = { ts, hash };
+    this.mmBookCommits.push(entry);
+    if (this.mmBookCommits.length > 500) this.mmBookCommits.shift();
+    this.appendMaker(this.makerCommitFile, { ts, hash, quotes: snap.quotes.length });
+    brainStream.publish("mm_book", ts, { committed: true, hash, ts });
+    if (this.committer) {
+      void this.committer.commit("quote_book", hash).then((sig) => {
+        if (sig) {
+          entry.sig = sig;
+          this.log(
+            `[mm] quote-book committed on-chain ${hash.slice(0, 12)}… → ${sig.slice(0, 12)}…`,
+          );
+        }
+      });
+    }
+  }
+
+  private appendMaker(file: string | null, line: unknown): void {
+    if (!file) return;
+    try {
+      fs.appendFileSync(file, `${JSON.stringify(line)}\n`);
+    } catch {
+      // Best-effort audit journal — never break the loop over a disk hiccup.
     }
   }
 

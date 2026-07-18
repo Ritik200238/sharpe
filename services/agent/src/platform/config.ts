@@ -41,6 +41,10 @@ export interface AgentConfig {
   apiPort: number;
   /** Starting paper bankroll in USDC. */
   bankrollUsdc: number;
+  /** Run the in-play market maker alongside the loop (SHARPE's primary job).
+   * On by default; `--mm off` disables it (e.g. for a heavy full-match
+   * replay where only the directional research path is wanted). */
+  mmEnabled: boolean;
 }
 
 export function loadAgentConfig(argv: string[] = process.argv.slice(2)): AgentConfig {
@@ -66,6 +70,7 @@ export function loadAgentConfig(argv: string[] = process.argv.slice(2)): AgentCo
     replaySpeed: Number(args.get("speed") ?? process.env.REPLAY_SPEED ?? 0),
     apiPort: Number(args.get("port") ?? process.env.API_PORT ?? 8787),
     bankrollUsdc: Number(args.get("bankroll") ?? process.env.BANKROLL_USDC ?? 2000),
+    mmEnabled: (args.get("mm") ?? process.env.MM_ENABLED ?? "on") !== "off",
   };
 }
 

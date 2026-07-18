@@ -52,7 +52,11 @@ export class TrackStore {
   }
 
   constructor(network: Network, mode: string) {
-    this.dir = path.join(TRACK_DIR, network, mode);
+    // Resolve the base from the live env (falling back to the frozen default)
+    // so a process can host isolated track stores — production sets it once,
+    // so this is behaviour-identical there.
+    const base = process.env.SHARPE_TRACK_DIR ?? TRACK_DIR;
+    this.dir = path.join(base, network, mode);
     fs.mkdirSync(this.dir, { recursive: true });
     this.decisionsFile = path.join(this.dir, "decisions.ndjson");
     this.settlementsFile = path.join(this.dir, "settlements.ndjson");

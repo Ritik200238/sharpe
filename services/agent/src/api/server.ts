@@ -100,6 +100,13 @@ export function startApiServer(
           const limit = Number(url.searchParams.get("limit") ?? 50);
           return send(200, agent ? agent.recentDecisions(limit) : []);
         }
+        case "/mm":
+          // The market maker's live book: quotes, inventory, spread-capture vs
+          // adverse-selection P&L, recent fills, and on-chain book commits.
+          return send(
+            200,
+            agent ? agent.mmStatus() : { enabled: false, snapshot: null, recentFills: [], bookCommits: [] },
+          );
         case "/positions":
           return send(200, agent ? agent.openPositions() : []);
         case "/settlements":

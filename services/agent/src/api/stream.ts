@@ -7,7 +7,13 @@
  * No event-bus library, no WebSocket dependency.
  */
 
-export type BrainEventType = "decision" | "settlement" | "review" | "status";
+export type BrainEventType =
+  | "decision"
+  | "settlement"
+  | "review"
+  | "status"
+  | "mm_fill"
+  | "mm_book";
 
 export interface BrainEvent {
   /** Monotonic id, `<ts>:<n>` — mirrors TxLINE's own id shape. */

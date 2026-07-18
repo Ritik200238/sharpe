@@ -28,7 +28,7 @@ import { KEYS_DIR, Network, NetworkConfig } from "../platform/config";
  */
 export const MEMO_PROGRAM_ID = new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
 
-export type CommitKind = "decision" | "settlement" | "review" | "digest";
+export type CommitKind = "decision" | "settlement" | "review" | "digest" | "quote_book";
 
 /** Write-ahead journal line: appended after signing, before broadcast. */
 export interface CommitIntent {
