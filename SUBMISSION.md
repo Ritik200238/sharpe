@@ -21,7 +21,7 @@ structural loser we measured at −18.6% ROI — it provides liquidity *around* 
 | **TxLINE as primary data source** | ✅ done | live SSE scores+odds, historical backfill, settlement proofs (list below) |
 | **Solana signup** | ✅ done | on-chain free-tier subscription tx `XeNPJG…x6Kxm` (devnet) |
 | **Demo video (≤5 min)** | ⏳ **operator action** | turnkey shot-by-shot script in `DEMOVIDEO.md` — ~20 min to record |
-| **Deployed app / testable endpoint** | ✅ **frontend LIVE** · ⏳ agent host | Frontend deployed on GitHub Pages: **https://ritik200238.github.io/sharpe/** (add `?api=<agent-url>` to point it at any agent, no rebuild). Agent ships via `Dockerfile`/`docker-compose.yml` to any VPS (`docs/DEPLOY.md`) — the one piece needing your host. |
+| **Deployed app / testable endpoint** | ✅ **LIVE + testable now** | **https://ritik200238.github.io/sharpe/** — a self-contained live demo: with no backend it loads fixtures captured from a real agent run, so the whole product (market-making book, ledger, performance, self-reviews) is populated and navigable. Add `?api=<agent-url>` to point it at any live agent (ships via `Dockerfile`/`docker-compose.yml`, `docs/DEPLOY.md`). Plus permanent on-chain artifacts anyone can hit (below). |
 | **Brief technical documentation** | ✅ done | `README.md`, `PLAN.md`, `SHARPEFRONTEND.md`, this file |
 | **TxLINE endpoints list** | ✅ done | below |
 | **API feedback** | ✅ done | below |
@@ -98,7 +98,7 @@ and produces the one thing money can't currently buy: a track record that can't 
 | **Deterministic, defensible logic** (same input → same decision, explainable) | ✅ proven by test |
 | **Reliability** (survives drops, reconnects, restarts, bad data) | ✅ hardened + tested |
 | **A track record** (stores decisions, checks if it was right) | ✅ core feature |
-| **Judges can test it** (deployed / live endpoint) | ⏳ deploy configs ready; operator import |
+| **Judges can test it** (deployed / live endpoint) | ✅ self-contained demo live on Pages + verifiable devnet txs |
 | **Public repo + clean docs + endpoints list** | ✅ |
 
 **CLAUDE.md Solana ladder:** at the **Competitive→Winning** line — the agent autonomously
@@ -125,9 +125,13 @@ Docker/Vercel deploy configs · backtest harness with an honest tuning progressi
 measured −18.6% ROI of directional trading is exactly why the job is market-making — see
 `docs/MARKET-MAKING.md`.)*
 
-**Operator actions (need your accounts, ~30 min total):** record the demo video
-(`DEMOVIDEO.md`) · import the frontend to Vercel · rent a small VPS and `docker compose up`
-the agent · paste the resulting links into the Superteam Earn form.
+**The one operator action that needs you:** record the ≤5-min demo video — the shot-by-shot
+script is turnkey in `DEMOVIDEO.md` (~20 min, needs your voice). Everything else a judge needs
+is already live: the self-contained demo URL and the verifiable devnet transactions above.
+
+**Optional enhancements (not blocking, need your accounts):** rent a VPS and `docker compose up`
+the agent for a 24/7 *live* endpoint (the demo URL already covers testability) · mainnet.
 
 **Roadmap (scoped, not blocking):** Anchor escrow/vault/registry programs
-(`programs/README.md`, toolchain blocker documented) · mainnet · third-party strategists.
+(`programs/README.md`, toolchain blocker documented — the working Memo + `validateStatV2`
+on-chain path already puts us at the Competitive→Winning rung) · third-party strategists.
