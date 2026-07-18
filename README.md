@@ -73,11 +73,15 @@ The chain accepted the truth and rejected the lie. That single mechanic is the e
 
 <div align="center">
 
+<img src="docs/assets/market-making.jpg" alt="SHARPE Market Making view — net +16.13 USDC, spread captured vs adverse selection, all 25 toxic flows deflected, live two-sided quotes" width="92%"/>
+
+*The **Market Making** view — the live book. Net P&L decomposed into spread captured vs. adverse selection, the pull-then-widen defence (here: **25/25 toxic flows deflected, 0 picked off**), and a two-sided quote on every live outcome. The book's canonical hash is [committed to Solana](https://explorer.solana.com/tx/5ba75L2uqVcvSwxomL8BfLFK46xLXXn5zY4wbNJUAwPYuf4E9qppHWK8hn7mzzfBRdCk1WcDwFpmQa25yNNCs95f?cluster=devnet) — a maker you can audit.*
+
 <img src="docs/assets/demo.gif" alt="SHARPE — the production frontend replaying the England 1-2 Argentina semifinal, settlements verified on-chain" width="92%"/>
 
 <img src="docs/assets/dashboard-live.jpg" alt="SHARPE production frontend — real semifinal settled, each outcome verified on-chain via validateStatV2" width="92%"/>
 
-*The production frontend replaying the real England 1–2 Argentina semifinal — every settlement carries **VERIFIED ✓ on-chain proof** (checked against TxODDS' Merkle root via `validateStatV2`, seq 962), wins and losses shown alike. Nothing here is faked; all of it is checkable.*
+*The same frontend replaying the real England 1–2 Argentina semifinal — every settlement carries **VERIFIED ✓ on-chain proof** (checked against TxODDS' Merkle root via `validateStatV2`, seq 962), wins and losses shown alike. Nothing here is faked; all of it is checkable.*
 
 </div>
 
