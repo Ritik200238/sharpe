@@ -3,11 +3,22 @@
   "private": true,
   "version": "0.1.0",
   "description": "The autonomous in-play market maker for World Cup odds, with an on-chain book that can't be faked.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Ritik200238/sharpe.git"
+  },
   "workspaces": [
     "services/*",
     "apps/*"
   ],
   "scripts": {
+    "test": "npm test --workspace services/agent",
+    "typecheck": "npm run typecheck --workspace services/agent && npm run typecheck --workspace services/recorder && npm run build --workspace apps/web",
+    "build": "npm run build --workspace apps/web",
+    "agent": "npm start --workspace services/agent",
+    "agent:replay": "npm run replay --workspace services/agent",
+    "mm-validate": "npm run mm-validate --workspace services/agent",
     "recorder": "npm run --workspace services/recorder",
     "web": "npm run dev --workspace apps/web"
   },
