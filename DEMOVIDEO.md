@@ -59,6 +59,12 @@ the replay to re-time. The ledger persists, so for a clean slate delete `data/tr
   Solana that checks it against the on-chain root." Point to `VERIFIED ✓ · validateStatV2 · seq 962`.
 - **Optional cut:** a terminal running `npx tsx tools/verify-proof.ts` — TRUE claim accepted,
   FALSE claim rejected.
+- **Our own program (strong beat):** open Solana Explorer on our deployed program
+  [`6T8ec9WX…mm9sT`](https://explorer.solana.com/address/6T8ec9WXJ9LLX7XRwrF1Q1u3tQxfXxX7X3zaLd3mm9sT?cluster=devnet)
+  and a commitment tx it recorded. **Say:** "And this isn't only TxLINE's program — *this* is a
+  Solana program **we** wrote and deployed: SHARPE's commitment registry. Every hash it records
+  lands in an immutable account that can never be overwritten. We built it, deployed it, and it's
+  running on devnet right now."
 
 ## 3:00–3:40 — Deterministic + it grades itself (Innovation)
 - **On screen:** the Performance digest / the research layer note on Command.
