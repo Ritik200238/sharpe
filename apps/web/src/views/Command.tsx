@@ -46,8 +46,59 @@ export function Command() {
 
   const vetoes = (status?.recentVetoes ?? []).slice(-5).reverse();
 
+  const mm = state.mm;
+  const mmT = mm?.enabled ? mm.snapshot?.totals ?? null : null;
+  const mmS = mm?.enabled ? mm.snapshot?.stats ?? null : null;
+
   return (
     <div>
+      {mmT && mmS ? (
+        <button
+          className="mm-home-band"
+          onClick={() => store.navigate({ name: "market" })}
+          aria-label="Open the live market-making book"
+        >
+          <div className="mm-home-head">
+            <span className="mm-home-title">MARKET MAKING — live book</span>
+            <span className="mm-home-link">view the book →</span>
+          </div>
+          <div className="mm-home-stats">
+            <span>
+              <span className="k">net P&L </span>
+              <span
+                className="big"
+                style={{ color: mmT.cashUsdc >= 0 ? "var(--green)" : "var(--red)" }}
+              >
+                {signedUsd(mmT.cashUsdc)} USDC
+              </span>
+            </span>
+            <span>
+              <span className="k">spread captured </span>
+              <span style={{ color: "var(--green)" }}>{signedUsd(mmT.spreadCapturedUsdc)}</span>
+            </span>
+            <span>
+              <span className="k">adverse </span>
+              <span style={{ color: mmT.adverseUsdc < 0 ? "var(--red)" : "var(--muted)" }}>
+                {signedUsd(mmT.adverseUsdc)}
+              </span>
+            </span>
+            <span>
+              <span className="k">toxic flow deflected </span>
+              {int(mmS.informedDeflected)}/{int(mmS.informedDeflected + mmS.informedFilled)}
+            </span>
+            <span>
+              <span className="k">live quotes </span>
+              {mm?.snapshot?.quotes.length ?? 0}
+            </span>
+          </div>
+        </button>
+      ) : null}
+
+      <div className="research-caption">
+        Directional research layer (paper) — the fair-value engine the maker prices off. We
+        measured directional trading at −18.6% ROI; that's why the job is market-making.
+      </div>
+
       <div className="vitals-grid">
         <div className="stat-card">
           <div className="stat-label">Realized bankroll</div>
