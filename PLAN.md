@@ -1,21 +1,29 @@
 # PLAN.md — Master Build & Launch Plan
 
-**Product (working name): SHARPE** — *The Provable Sports Trading Agent*
-Pairs with: `CLAUDE.md` (build rules) · `judge.md` (scorecard) · `DECISIONS.md` (why this idea won)
+**Product (working name): SHARPE** — *The Provable In-Play Market Maker*
+Pairs with: `CLAUDE.md` (build rules) · `judge.md` (scorecard) · `DECISIONS.md` (why this idea won) · `docs/MARKET-MAKING.md` (the maker spec)
+
+> **Pivot note (kept for honesty).** This plan was first written for a *directional* trading
+> agent. We built it, then measured it: trading TxLINE's de-margined consensus for profit is a
+> structural loser (−18.6% ROI over 20 real matches). So the **job changed to in-play
+> market-making** — provide liquidity, earn the spread, and never need to beat the consensus.
+> The directional brain (§4) survives as the **fair-value engine the maker prices off**, and as
+> the honest evidence for why we make markets instead. Where this doc still says "trade
+> mispricings", read "quote around fair value." The maker spec is `docs/MARKET-MAKING.md`.
 
 ---
 
 ## 0. The Job (one sentence — Factor 1: The Brain)
 
-> **SHARPE watches every World Cup match in real time, computes the fair price of every outcome from TxLINE's consensus odds + live match state, trades mispricings with USDC on-chain, and settles + proves every result cryptographically — with zero human input.**
+> **SHARPE watches every World Cup match in real time, computes the fair price of every outcome from TxLINE's consensus odds + live match state, quotes a two-sided market (bid + ask) around it, earns the spread while defending against adverse selection around goals, and commits + proves every quote and settlement cryptographically — with zero human input.**
 
 If a judge asks "what does it do?", that sentence is the answer. Everything below serves it.
 
 **Official identity — the ONLY way we ever describe this product:**
-> **"The autonomous sports trading agent with an unfakeable public track record."**
+> **"The autonomous in-play market maker for World Cup odds, with an on-chain book that can't be faked."**
 Every feature is a detail behind that sentence. If a feature needs its own sentence to matter, it gets demoted.
 
-**The hidden-requirement answer (judge.md §2):** SHARPE automates what betting syndicates pay analyst teams to do manually (price, monitor, execute, settle, audit) — and produces the one thing money can't currently buy in this industry: **a track record that cannot be faked.**
+**The hidden-requirement answer (judge.md §2):** SHARPE does the real desk job a market-making firm pays traders to do (quote, manage inventory, defend against toxic flow, settle, audit) — and produces the one thing money can't currently buy in this industry: **a liquidity provider whose book cannot be faked.**
 
 ---
 
@@ -23,7 +31,7 @@ Every feature is a detail behind that sentence. If a feature needs its own sente
 
 Three ways this project can lose, and the standing rules that prevent them:
 
-1. **Never look like a Track 3 project.** The **agent is the hero of every sentence** — in the demo, README, dashboard copy, and interviews. The exchange, escrow, and vault are *the agent's tools*, mentioned only as things the agent uses. We never introduce ourselves as a market, protocol, or infrastructure.
+1. **Never look like a Track 3 project.** The **agent is the hero of every sentence** — in the demo, README, dashboard copy, and interviews. It's a *trading agent that makes markets*, not a market/venue we're launching. The exchange, escrow, and vault are *the agent's tools*, mentioned only as things the agent uses. We never introduce ourselves as a market, protocol, or infrastructure.
 2. **Never miss the data window.** Recording real World Cup matches (semis + final, before July 19, 2026) outranks every other task this week. No exceptions.
 3. **Never let complexity into the demo.** The 5-minute video tells ONE story — *agent sees → decides → acts → proves* — told through the agent's own decision feed. All depth (mechanism design, program architecture, math derivations) lives in the repo/docs for judges who dig.
 
@@ -35,7 +43,7 @@ Three ways this project can lose, and the standing rules that prevent them:
 
 | Pillar | Question it answers | Our answer |
 |---|---|---|
-| **Brain** — strategy | What job runs automatically? | Fair-value pricing + mispricing detection + risk-managed execution (§4) |
+| **Brain** — strategy | What job runs automatically? | Fair-value pricing → two-sided quoting + inventory skew + adverse-selection defence (§4, `docs/MARKET-MAKING.md`) |
 | **Engine** — autonomy | Can it run unsupervised forever? | Event-driven loop, self-healing, deploy-and-leave (§5) |
 | **Logic** — decisions | Why did it act? | Deterministic math, human-readable reason per decision, on-chain commit (§4.4) |
 
