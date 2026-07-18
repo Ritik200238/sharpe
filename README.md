@@ -209,7 +209,7 @@ services/agent/          the product — autonomous trading agent
   src/track/             append-only, event-sourced public track record
   src/api/               dashboard · status API · live SSE brain feed
   tools/                 verify-proof · 20-match backtest · synthetic match generator
-  test/                  36 tests: model math, intelligence, WAL crashes, bit-for-bit determinism
+  test/                  53 tests: model math, market-making, registry client, intelligence, WAL crashes, bit-for-bit determinism
 services/recorder/       TxLINE signup + raw stream recorder + historical backfill
 data/recordings/         20 real World Cup knockout matches (scores + odds journals)
 PLAN.md · DECISIONS.md   how this was designed, and why
@@ -244,7 +244,7 @@ Our devnet subscription is itself on-chain: [`XeNPJG…x6Kxm`](https://explorer.
 |---|---|
 | **Core functionality & data ingestion** | dual SSE streams, raw-fidelity journals, replay-identical pipeline, 20-match real corpus |
 | **Autonomous operation** | one command → discovers fixtures, trades, settles, learns, recovers from crashes — zero human input (config at deploy only) |
-| **Logic & code architecture** | deterministic glass-box: every decision carries its math and its reason; 36 tests; frozen decision-path discipline |
+| **Logic & code architecture** | deterministic glass-box: every decision carries its math and its reason; 53 tests; frozen decision-path discipline |
 | **Innovation & novelty** | commit-before-outcome + proof-gated settlement + an agent that statistically audits **itself** — a track record that cannot be faked |
 | **Production readiness** | write-ahead commitment journal, boot reconcile, self-healing feeds, exposure caps, drawdown breakers, live 24/7 on devnet |
 
