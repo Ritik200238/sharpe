@@ -3,6 +3,7 @@ import type { Route } from "../lib/router";
 
 const NAV: Array<{ label: string; route: Route }> = [
   { label: "Command", route: { name: "command" } },
+  { label: "Market Making", route: { name: "market" } },
   { label: "Ledger", route: { name: "ledger" } },
   { label: "Performance", route: { name: "performance" } },
   { label: "About", route: { name: "about" } },

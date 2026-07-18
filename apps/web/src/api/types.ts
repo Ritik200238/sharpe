@@ -208,8 +208,90 @@ export interface TrackRecord {
   reviews: MatchReview[];
 }
 
+// ---------- market maker (GET /mm) ----------
+
+/** One live two-sided quote on a binary outcome. */
+export interface MmQuoteLine {
+  fixtureId: number;
+  marketKey: string;
+  outcomeIndex: number;
+  outcomeName: string;
+  /** Price the maker BUYS the share at (fraction). */
+  bidProb: number;
+  /** Price the maker SELLS the share at (fraction). */
+  askProb: number;
+  fairProb: number;
+  halfSpread: number;
+  /** Inventory skew applied to the mid (signed fraction). */
+  skew: number;
+  /** True while the quote is widened by the adverse-selection defence. */
+  widened: boolean;
+  /** Signed shares held; + = long the outcome. */
+  inventory: number;
+  ts: number;
+}
+
+export interface MmTotals {
+  cashUsdc: number;
+  fills: number;
+  volumeShares: number;
+  spreadCapturedUsdc: number;
+  adverseUsdc: number;
+  openInventoryAbs: number;
+}
+
+export interface MmStats {
+  ticks: number;
+  quotesPosted: number;
+  pulled: number;
+  widened: number;
+  informedDeflected: number;
+  informedFilled: number;
+}
+
+export interface MmSnapshot {
+  totals: MmTotals;
+  stats: MmStats;
+  quotes: MmQuoteLine[];
+}
+
+/** A single trade the maker filled. */
+export interface MmFill {
+  fixtureId: number;
+  marketKey: string;
+  outcomeIndex: number;
+  outcomeName: string;
+  side: "buy" | "sell";
+  shares: number;
+  priceProb: number;
+  fairProb: number;
+  informed: boolean;
+  ts: number;
+}
+
+/** An on-chain quote-book commitment (sig present once the tx confirms). */
+export interface MmBookCommit {
+  ts: number;
+  hash: string;
+  sig?: string;
+}
+
+/** GET /mm */
+export interface MmStatus {
+  enabled: boolean;
+  snapshot: MmSnapshot | null;
+  recentFills: MmFill[];
+  bookCommits: MmBookCommit[];
+}
+
 /** SSE /stream event types. */
-export type StreamEventType = "decision" | "settlement" | "review" | "status";
+export type StreamEventType =
+  | "decision"
+  | "settlement"
+  | "review"
+  | "status"
+  | "mm_fill"
+  | "mm_book";
 
 /** SSE payload envelope: data: { type, ts, data }. */
 export interface StreamEnvelope {

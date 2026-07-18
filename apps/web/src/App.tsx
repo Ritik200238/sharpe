@@ -3,6 +3,7 @@ import { useStore } from "./store/store";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import { Command } from "./views/Command";
+import { MarketMaking } from "./views/MarketMaking";
 import { Ledger } from "./views/Ledger";
 import { Performance } from "./views/Performance";
 import { DecisionDetail } from "./views/DecisionDetail";
@@ -15,6 +16,9 @@ export function App() {
 
   let view: ReactElement;
   switch (state.route.name) {
+    case "market":
+      view = <MarketMaking />;
+      break;
     case "ledger":
       view = <Ledger />;
       break;

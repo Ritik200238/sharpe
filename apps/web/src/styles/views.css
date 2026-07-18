@@ -940,3 +940,202 @@
   color: var(--faint);
   line-height: 1.6;
 }
+
+/* ---------- market making view ---------- */
+
+.mm-tagline {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.agg-bar.mm {
+  margin-bottom: 16px;
+  font-size: 13px;
+  padding: 12px 16px;
+}
+
+.mm-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 900px) {
+  .mm-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mm-defence {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px;
+  margin: 4px 0 14px;
+}
+
+.mm-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mm-stat .v {
+  font-family: var(--font-mono);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.mm-stat .l {
+  font-size: 11px;
+  color: var(--faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.mm-defence-bar {
+  height: 6px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--red) 35%, transparent);
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.mm-defence-bar .fill {
+  height: 100%;
+  background: var(--green);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.mm-note {
+  font-size: 12px;
+  color: var(--faint);
+  line-height: 1.6;
+}
+
+.mm-quotes-panel {
+  margin-bottom: 16px;
+}
+
+.mm-table {
+  min-width: 760px;
+}
+
+.mm-table td {
+  padding: 9px 8px;
+  font-family: var(--font-mono);
+}
+
+.mm-table tbody tr {
+  cursor: default;
+}
+
+.mm-table tbody tr:hover {
+  background: transparent;
+}
+
+.mm-mkt {
+  color: var(--muted);
+}
+
+.mm-fair {
+  color: var(--faint);
+}
+
+.mm-state {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--faint);
+}
+
+.mm-state.widened {
+  color: var(--amber);
+}
+
+.mm-tape {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.mm-fill-row,
+.mm-commit-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.mm-side {
+  font-weight: 700;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  min-width: 52px;
+}
+
+.mm-side.buy {
+  color: var(--green);
+}
+
+.mm-side.sell {
+  color: var(--red);
+}
+
+.mm-fill-body {
+  flex: 1;
+  min-width: 0;
+  color: var(--text);
+}
+
+.mm-fill-body .muted,
+.mm-fill-row .muted {
+  color: var(--faint);
+}
+
+.mm-badge.adverse {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--red);
+  border: 1px solid color-mix(in srgb, var(--red) 50%, transparent);
+  border-radius: 4px;
+  padding: 1px 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.mm-fill-ago {
+  color: var(--faint);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.mm-hash {
+  color: var(--muted);
+}
+
+.mm-sig {
+  flex: 1;
+  color: var(--lime);
+  text-decoration: none;
+}
+
+.mm-sig.muted {
+  color: var(--faint);
+}
+
+.mm-footnote {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--faint);
+  margin-top: 4px;
+}

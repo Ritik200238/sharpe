@@ -14,6 +14,7 @@ import {
   fetchDecisions,
   fetchDigest,
   fetchHealth,
+  fetchMm,
   fetchReviews,
   fetchSettlements,
   fetchStatus,
@@ -28,6 +29,7 @@ import type {
   FeedStatusEvent,
   Health,
   MatchReview,
+  MmStatus,
   SettlementRecord,
   StreamEnvelope,
   VetoRecord,
@@ -64,6 +66,8 @@ export interface StoreState {
   status: AgentStatus | null;
   health: Health | null;
   phase: string | null;
+  /** The market maker's live book (null before first fetch; enabled:false when off). */
+  mm: MmStatus | null;
   digests: Map<number, Digest>;
   connection: ConnectionState;
   feed: FeedItem[];
@@ -104,6 +108,7 @@ class SharpeStore {
     status: null,
     health: null,
     phase: null,
+    mm: null,
     digests: new Map(),
     connection: "polling",
     feed: [],
@@ -138,6 +143,7 @@ class SharpeStore {
   private pendingAnnounce = 0;
   private announceTimer: ReturnType<typeof setTimeout> | null = null;
   private digestRefreshTimer: ReturnType<typeof setTimeout> | null = null;
+  private mmRefreshTimer: ReturnType<typeof setTimeout> | null = null;
 
   // ---------- subscription ----------
 
@@ -206,6 +212,7 @@ class SharpeStore {
       if (this.state.connection === "dead") this.state.connection = this.es ? "live-sse" : "polling";
       this.notify();
 
+      void this.refreshMm();
       const [decisions, settlements, reviews, digest] = await Promise.all([
         fetchDecisions(DECISION_LIMIT),
         fetchSettlements(),
@@ -415,6 +422,14 @@ class SharpeStore {
     es.addEventListener("settlement", handle);
     es.addEventListener("review", handle);
     es.addEventListener("status", handle);
+    // Maker activity: mark the stream alive and debounce a /mm refetch (the
+    // book detail is served whole by /mm, so we don't reconstruct it here).
+    const makerHandle = (): void => {
+      this.state.lastStreamTs = Date.now();
+      this.scheduleMmRefresh();
+    };
+    es.addEventListener("mm_fill", makerHandle);
+    es.addEventListener("mm_book", makerHandle);
   }
 
   private ingest(envelope: StreamEnvelope): void {
@@ -462,6 +477,7 @@ class SharpeStore {
       const [health, statusRaw] = await Promise.all([fetchHealth(), fetchStatus()]);
       this.applyHealth(health);
       this.applyStatus(statusRaw);
+      void this.refreshMm();
       if (this.state.connection === "dead") {
         this.state.connection = this.es && this.es.readyState === EventSource.OPEN ? "live-sse" : "polling";
         void this.hydrate();
@@ -526,6 +542,28 @@ class SharpeStore {
     } catch {
       // non-fatal; digest stays cached
     }
+  }
+
+  /** Pull the maker's live book. The /mm payload carries everything the
+   * market-making view needs (snapshot + fills + on-chain commits), so the
+   * view is a pure function of it — no client-side book reconstruction. */
+  private async refreshMm(): Promise<void> {
+    try {
+      const mm = await fetchMm();
+      this.state.mm = mm;
+      this.notify();
+    } catch {
+      // non-fatal; the last snapshot stays on screen
+    }
+  }
+
+  /** Coalesce the burst of mm_fill/mm_book stream events into one refetch. */
+  private scheduleMmRefresh(): void {
+    if (this.mmRefreshTimer !== null) return;
+    this.mmRefreshTimer = setTimeout(() => {
+      this.mmRefreshTimer = null;
+      void this.refreshMm();
+    }, 1200);
   }
 
   // ---------- UI actions ----------

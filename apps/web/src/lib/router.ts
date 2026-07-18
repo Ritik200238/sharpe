@@ -11,6 +11,7 @@
 
 export type Route =
   | { name: "command" }
+  | { name: "market" }
   | { name: "ledger" }
   | { name: "performance" }
   | { name: "detail"; hash: string }
@@ -23,6 +24,8 @@ export function parseHash(hash: string): Route {
   const parts = path.split("/").filter((p) => p.length > 0);
   if (parts.length === 0) return { name: "command" };
   switch (parts[0]) {
+    case "market":
+      return { name: "market" };
     case "ledger":
       return { name: "ledger" };
     case "performance":
@@ -46,6 +49,8 @@ export function routeToHash(route: Route): string {
   switch (route.name) {
     case "command":
       return "#/";
+    case "market":
+      return "#/market";
     case "ledger":
       return "#/ledger";
     case "performance":

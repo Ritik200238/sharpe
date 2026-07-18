@@ -8,6 +8,7 @@ import type {
   Digest,
   Health,
   MatchReview,
+  MmStatus,
   SettlementRecord,
   TrackRecord,
 } from "./types";
@@ -64,5 +65,8 @@ export const fetchDigest = (days: number): Promise<Digest> =>
 
 export const fetchTrackRecord = (): Promise<TrackRecord> =>
   getJson<TrackRecord>("/track-record");
+
+/** /mm — the market maker's live book (enabled:false when the maker is off). */
+export const fetchMm = (): Promise<MmStatus> => getJson<MmStatus>("/mm");
 
 export const streamUrl = (): string => `${BASE}/stream`;
