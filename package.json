@@ -2,7 +2,7 @@
   "name": "sharpe",
   "private": true,
   "version": "0.1.0",
-  "description": "The autonomous sports trading agent with an unfakeable public track record.",
+  "description": "The autonomous in-play market maker for World Cup odds, with an on-chain book that can't be faked.",
   "workspaces": [
     "services/*",
     "apps/*"

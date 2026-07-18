@@ -2,7 +2,7 @@
   "name": "@sharpe/agent",
   "private": true,
   "version": "0.1.0",
-  "description": "SHARPE — the autonomous sports trading agent with an unfakeable public track record.",
+  "description": "SHARPE — the autonomous in-play market maker for World Cup odds, with an on-chain book that can't be faked.",
   "scripts": {
     "start": "tsx src/main.ts",
     "replay": "tsx src/main.ts --mode replay",

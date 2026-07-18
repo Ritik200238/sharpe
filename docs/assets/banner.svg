@@ -35,15 +35,15 @@
   <text x="84" y="150" font-family="Consolas,Menlo,monospace" font-size="86" font-weight="bold"
         fill="#d7dee8" letter-spacing="10">SHARPE<tspan fill="#4bd1a0">▮</tspan></text>
   <text x="88" y="196" font-family="Consolas,Menlo,monospace" font-size="21" fill="#6b7686">
-    the autonomous sports trading agent
+    the autonomous in-play market maker
   </text>
   <text x="88" y="226" font-family="Consolas,Menlo,monospace" font-size="21" fill="#4bd1a0">
-    with an unfakeable public track record
+    quotes both sides · earns the spread · book you can audit
   </text>
 
-  <!-- commit → prove → settle chain -->
+  <!-- quote → defend → capture → prove chain -->
   <g font-family="Consolas,Menlo,monospace" font-size="15" fill="#6b7686">
-    <text x="88" y="272">decide <tspan fill="#4bd1a0">→</tspan> commit on-chain <tspan fill="#4bd1a0">→</tspan> outcome lands <tspan fill="#4bd1a0">→</tspan> Merkle-proof settle <tspan fill="#4bd1a0">→</tspan> learn from proven facts <tspan fill="#4bd1a0">→</tspan> repeat</text>
+    <text x="88" y="272">quote both sides <tspan fill="#4bd1a0">→</tspan> defend around goals <tspan fill="#4bd1a0">→</tspan> capture the spread <tspan fill="#4bd1a0">→</tspan> commit book on-chain <tspan fill="#4bd1a0">→</tspan> Merkle-proof settle <tspan fill="#4bd1a0">→</tspan> repeat</text>
   </g>
 
   <!-- hash ribbon -->

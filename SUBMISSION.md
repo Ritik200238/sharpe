@@ -1,7 +1,14 @@
 # SUBMISSION.md — TxODDS World Cup Hackathon · Track 2 (Trading Tools & Agents)
 
-**Project:** SHARPE — the autonomous sports trading agent with an unfakeable public track record.
+**Project:** SHARPE — the autonomous **in-play market maker** for World Cup odds, with an on-chain book that can't be faked.
 **Repo:** https://github.com/Ritik200238/sharpe
+
+**What it is in one line:** SHARPE quotes a two-sided price on every live outcome, earns the
+**spread**, and defends itself against getting picked off around goals — the real job on a
+trading desk — while committing every quote, fill, and settlement to Solana so its book is
+independently auditable. (It doesn't try to *beat* TxLINE's de-margined consensus — that's a
+structural loser we measured at −18.6% ROI — it provides liquidity *around* it. Full reasoning:
+`docs/MARKET-MAKING.md`.)
 
 ---
 
@@ -10,7 +17,7 @@
 | Requirement | Status | Where |
 |---|---|---|
 | **Public GitHub repo** | ✅ done | https://github.com/Ritik200238/sharpe |
-| **Working build (not a concept)** | ✅ done | 36 tests green; agent runs live on devnet; frontend builds |
+| **Working build (not a concept)** | ✅ done | 46 tests green; agent runs live on devnet; frontend builds |
 | **TxLINE as primary data source** | ✅ done | live SSE scores+odds, historical backfill, settlement proofs (list below) |
 | **Solana signup** | ✅ done | on-chain free-tier subscription tx `XeNPJG…x6Kxm` (devnet) |
 | **Demo video (≤5 min)** | ⏳ **operator action** | turnkey shot-by-shot script in `DEMOVIDEO.md` — ~20 min to record |
@@ -57,10 +64,10 @@ a *final* stat vs an in-running one is subtle.
 | # | Criterion | Evidence in this build |
 |---|---|---|
 | 1 | **Core Functionality & Data Ingestion** | Dual live SSE ingestion + raw-fidelity journals + replay-identical pipeline; a **20-match real World Cup corpus**; runs live on devnet right now. |
-| 2 | **Autonomous Operation** | One command → discovers fixtures, prices, trades, commits, settles, learns, and self-recovers from crashes. Zero human input after start (config at deploy only). |
-| 3 | **Logic & Code Architecture** | Deterministic glass-box: every decision carries its math + a plain-English reason; bit-for-bit determinism proven by test (and confirmed identical across independent real-data runs); 36 tests; frozen decision-path discipline. |
-| 4 | **Innovation & Novelty** | Commit-before-outcome + proof-gated settlement + an agent that statistically **audits and benches itself** — a track record that cannot be faked. Not a repackaged feed, not a GPT wrapper. |
-| 5 | **Production Readiness** | Write-ahead commit journal + boot reconcile, full state rebuilt from ledger on `kill -9`, self-healing feeds, exposure caps + drawdown breaker, Docker deploy, live 24/7. |
+| 2 | **Autonomous Operation** | One command → discovers fixtures, prices fair value, **quotes both sides**, fills flow, defends around goals, commits, settles, and self-recovers from crashes. Zero human input after start (config at deploy only). |
+| 3 | **Logic & Code Architecture** | Deterministic glass-box: every quote carries its math (fair value, spread, inventory skew, protection phase) + a plain-English reason; bit-for-bit determinism proven by test (and confirmed identical across independent real-data runs); 46 tests; frozen decision-path discipline. |
+| 4 | **Innovation & Novelty** | An in-play **market maker with an adverse-selection defence** (pull-then-widen around goals, measured to turn a −7 loss into a +16 profit) whose whole book is **committed on-chain before outcomes exist** and settled by Merkle proof — a liquidity provider you can *audit*. Not a feed reskin, not a GPT wrapper, not another doomed attempt to out-predict the consensus. |
+| 5 | **Production Readiness** | Write-ahead commit journal + boot reconcile, full state rebuilt from ledger on `kill -9`, self-healing feeds, inventory + exposure caps, Docker deploy, live 24/7. |
 
 **judge.md hidden requirement ("would anyone care if it ran 24/7?")** — yes: it automates
 what betting syndicates pay analyst teams to do (price, monitor, execute, settle, audit)
@@ -90,12 +97,16 @@ pull; not a black box; UI did not eat the substance; TxL token never used for po
 
 ## Honest status of everything
 
-**Done & verified:** data spine · deterministic brain (de-vig, λ-model, S1/S2/S3) ·
-intelligence layer (calibration, UCB allocation, SPRT self-suspension, self-reviews) ·
-risk engine · append-only track record · on-chain commitments (write-ahead + reconcile) ·
-`validateStatV2` settlement proven on a real semifinal · 36 tests · TxLINE signup + 20-match
-corpus · production frontend (all 7 views, browser-verified) · Docker/Vercel deploy configs
-· backtest harness with an honest 3-run tuning progression.
+**Done & verified:** data spine · deterministic **fair-value brain** (Shin de-vig, market-implied
+λ-Poisson) · **market-making engine** (two-sided quoting, inventory skew, adverse-selection
+pull/widen defence, deterministic fill model, P&L book) validated ON vs OFF (−7 → +16 USDC,
+protection worth +23) · intelligence layer (calibration, UCB allocation, SPRT self-suspension,
+self-reviews) · risk engine · append-only track record · on-chain commitments (write-ahead +
+reconcile) · `validateStatV2` settlement proven on a real semifinal · 46 tests (incl. 10 MM) ·
+TxLINE signup + 20-match corpus · production frontend (all 7 views, browser-verified) ·
+Docker/Vercel deploy configs · backtest harness with an honest tuning progression. *(The
+measured −18.6% ROI of directional trading is exactly why the job is market-making — see
+`docs/MARKET-MAKING.md`.)*
 
 **Operator actions (need your accounts, ~30 min total):** record the demo video
 (`DEMOVIDEO.md`) · import the frontend to Vercel · rent a small VPS and `docker compose up`

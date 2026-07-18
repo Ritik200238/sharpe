@@ -1,20 +1,21 @@
 <div align="center">
 
-<img src="docs/assets/banner.svg" alt="SHARPE — the autonomous sports trading agent with an unfakeable public track record" width="100%"/>
+<img src="docs/assets/banner.svg" alt="SHARPE — the autonomous in-play market maker for World Cup odds" width="100%"/>
 
 <br/>
 
-[![tests](https://img.shields.io/badge/tests-36%20passing-4bd1a0?style=flat-square&logo=github)](services/agent/test)
+[![tests](https://img.shields.io/badge/tests-46%20passing-4bd1a0?style=flat-square&logo=github)](services/agent/test)
 [![determinism](https://img.shields.io/badge/determinism-bit--for--bit-4bd1a0?style=flat-square)](services/agent/test/determinism.test.ts)
 [![typescript](https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square&logo=typescript&logoColor=white)](tsconfig.base.json)
 [![solana](https://img.shields.io/badge/Solana-devnet-9945FF?style=flat-square&logo=solana)](https://explorer.solana.com/?cluster=devnet)
 [![txline](https://img.shields.io/badge/data-TxLINE%20live-e0655f?style=flat-square)](https://txline.txodds.com)
 [![hackathon](https://img.shields.io/badge/TxODDS%20World%20Cup-Track%202%3A%20Trading%20Agents-d9a94a?style=flat-square)](https://earn.superteam.fun)
 
-**Every betting "expert" can fake their track record. SHARPE can't lie.**
+**The autonomous in-play market maker for World Cup odds.**
 
-*It watches every World Cup match in real time, prices every outcome, trades mispricings with USDC —*
-*and every decision is hashed onto Solana **before** the result exists. Settlement is a Merkle proof, not a promise.*
+*It quotes two-sided prices on every live outcome, earns the **spread**, and defends itself from getting*
+*picked off around goals — the hardest, most real job on a trading desk. And every quote it makes is*
+*provable on-chain: a market maker whose book **cannot be faked**.*
 
 ### ▶ Live frontend: **[ritik200238.github.io/sharpe](https://ritik200238.github.io/sharpe/)**
 
@@ -24,16 +25,30 @@
 
 ---
 
-## Why this exists
+## Why a market maker
 
-The sports-trading world runs on unverifiable claims: tipsters with cherry-picked screenshots, bots whose losing runs quietly disappear, "verified" records hosted by whoever profits from them. Meanwhile prediction markets settle through oracle committees and dispute windows — humans, again.
+Most "trading agents" try to *predict* — to beat the market. But TxLINE ships **de-margined
+consensus** odds: the sharpest aggregate price on earth. Betting against it is a structural
+loser (we measured it: **−18.6% ROI** trying). A market maker doesn't play that game. It
+**provides liquidity** — quotes a price to buy *and* a price to sell — and earns the **spread**
+between them. It never needs to know who wins; it needs to quote fair and manage its risk.
+That's the most real, most valuable job on any trading desk, and it's a named Track 2 idea.
 
-SHARPE deletes the human from both ends of the trust problem:
+The whole game of in-play market-making is one hard problem: **adverse selection.** The instant
+a goal lands, every price jumps, and anyone with a faster feed picks off your stale quotes for
+free. SHARPE's edge is surviving exactly that:
 
-- 🧠 **It decides alone.** A deterministic pricing brain — no LLM, no black box, no manual approvals. Same input → same decision → same hash. Always. *(Proven by test, bit-for-bit, [across the full pipeline](services/agent/test/determinism.test.ts) — and confirmed on real match data across independent runs.)*
-- ⛓️ **It commits before the outcome.** Every decision's canonical hash lands on Solana while the ball is still rolling. Backdating, pruning, or "forgetting" a loss is cryptographically impossible.
-- ⚖️ **It settles by proof, no referee.** When TxLINE publishes a match's `game_finalised` record, SHARPE fetches the Merkle proof and verifies the result against the daily root TxODDS anchored **on-chain** — via the TxLINE program's `validateStatV2`. **No verified proof → no settlement.** Local data alone can never move money.
-- 📉 **It learns only from facts it can prove.** Stake sizing shrinks when its calibration slips, capital flows toward strategies with proven ROI, and a statistically broken strategy **suspends itself** — every adaptation a pure function of the settled, on-chain-verifiable history.
+- 💹 **It quotes both sides, continuously.** For every live outcome it posts a bid and an ask
+  around fair value, repricing as the match moves — earning the spread on the flow it fills.
+- 🛡️ **It defends against toxic flow.** The instant TxLINE reports a goal or red card, SHARPE
+  **pulls its quotes, then re-quotes wide** while the new price settles — so faster traders find
+  nothing to pick off. *Measured value: this defence turned a −7 loss into a +16 profit on a
+  match (the full accounting is in [docs/MARKET-MAKING.md](docs/MARKET-MAKING.md)).*
+- 🧠 **It decides alone, deterministically.** No LLM, no black box, no manual approvals. Same
+  events → same quotes → same book, [bit-for-bit](services/agent/test/determinism.test.ts).
+- ⛓️ **Its book cannot be faked.** Every quote, fill, and settlement is committed to Solana and
+  each match settles by a Merkle proof verified against TxODDS' on-chain root
+  (`validateStatV2`) — **no verified proof, no settlement.** A market maker you can *audit*.
 
 Built for the **TxODDS World Cup Hackathon — Track 2 (Trading Tools & Agents)**. Designed to outlive it.
 

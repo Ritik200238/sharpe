@@ -1,65 +1,90 @@
 export function About() {
   return (
     <div className="narrow">
-      <h1 className="about-hero">A track record that cannot be faked.</h1>
+      <h1 className="about-hero">A market maker whose book can't be faked.</h1>
       <p className="about-sub">
-        SHARPE is an autonomous agent that trades football match outcomes in USDC — and
-        publishes every decision, every loss, and every self-correction on a public,
-        cryptographically anchored ledger.
+        SHARPE is an autonomous in-play market maker for World Cup odds. It quotes a price to
+        buy <em>and</em> a price to sell on every live outcome, earns the spread between them,
+        and defends itself from getting picked off when goals move the market — while committing
+        every quote, fill, and settlement to Solana so its book is independently auditable.
       </p>
 
-      <h2 className="about-label first">The problem</h2>
+      <h2 className="about-label first">Why make markets — not predict</h2>
       <p className="about-body">
-        Performance claims in trading are unfalsifiable. Tipsters cherry-pick screenshots;
-        bots delete losing runs; "verified" records are hosted by whoever profits from them.
-        One documented scam collected $3.7M in subscriptions on fabricated results. And even
-        "decentralized" settlement still resolves through oracle committees, dispute windows,
-        and admin keys — the referee is still a person.
+        Most "trading agents" try to beat the market. But TxLINE ships de-margined consensus
+        odds — the sharpest aggregate price there is. Betting against it is a structural loser;
+        we built the directional agent first and measured it at <strong>−18.6% ROI</strong>. A
+        market maker never plays that game. It <strong>provides liquidity</strong> — quotes both
+        sides and earns the spread — and never needs to know who wins. That's the most real,
+        most valuable job on a trading desk, and it's a named Track&nbsp;2 idea.
       </p>
 
       <h2 className="about-label">What SHARPE does differently</h2>
       <div className="about-cards">
         <div className="panel">
           <div className="about-card-title">
-            <span className="about-card-num">01</span>Commits before outcomes — history
-            can't be faked
+            <span className="about-card-num">01</span>Quotes both sides, continuously
           </div>
           <div className="about-card-body">
-            Every decision's SHA-256 hash is written to Solana before the outcome exists.
-            Nothing can be backdated, edited, or quietly deleted. The bad days are as
-            permanent as the good ones.
+            For every live outcome it posts a bid and an ask around fair value, repricing as the
+            match moves and skewing its quotes to work down whatever inventory it takes on. It
+            earns the half-spread on the flow it fills — the market maker's edge.
           </div>
         </div>
         <div className="panel">
           <div className="about-card-title">
-            <span className="about-card-num">02</span>Settles by on-chain proof — results
-            can't be faked
+            <span className="about-card-num">02</span>Defends against toxic flow
           </div>
           <div className="about-card-body">
-            Every settlement submits a Merkle proof of the final match stats to TxLINE's
-            validateStatV2 program on Solana, which checks it against the data root TxODDS
-            anchored on-chain. If the proof doesn't verify, money does not move. No oracle
-            committee, no dispute window, no human judgment.
+            The whole game of in-play making is adverse selection: the instant a goal lands,
+            every price jumps and faster traders pick off stale quotes. The moment TxLINE reports
+            a goal or red card, SHARPE <strong>pulls its quotes, then re-quotes wide</strong>{" "}
+            until the new price settles. Measured, that defence turned a −7 loss into a +16
+            profit on a match.
           </div>
         </div>
         <div className="panel">
           <div className="about-card-title">
-            <span className="about-card-num">03</span>Learns from proven facts — and benches
-            itself
+            <span className="about-card-num">03</span>Its book is provable on-chain
           </div>
           <div className="about-card-body">
-            The agent recalibrates only on verified settlements. When it detects its own edge
-            decaying it shrinks every stake automatically; a strategy that underperforms its
-            own promises is suspended to shadow mode until it re-qualifies. Decay can't hide.
+            Every quote and fill is committed to Solana, and each match settles by a Merkle proof
+            of the final stats verified against TxODDS' on-chain root (validateStatV2). If the
+            proof doesn't verify, money does not move. A market maker you can <em>audit</em> —
+            no oracle committee, no dispute window, no admin key.
           </div>
         </div>
       </div>
 
+      <h2 className="about-label">How it quotes</h2>
+      <p className="about-body mb10">
+        The fair value comes from a deterministic model — Shin de-vig on the consensus odds, then
+        a market-implied Poisson that reprices live as the clock and score change. Around that
+        fair value the maker builds its two-sided quote:
+      </p>
+      <ul className="about-list">
+        <li>
+          <strong style={{ color: "var(--s1)" }}>SPREAD</strong> — the half-spread widens with
+          uncertainty (more time left, higher outcome variance → more cushion), so it's paid for
+          the risk it carries.
+        </li>
+        <li>
+          <strong style={{ color: "var(--s2)" }}>SKEW</strong> — inventory shades the mid: long
+          a share, it shades both quotes down to offload; short, it shades up. The book stays
+          balanced without predicting anything.
+        </li>
+        <li>
+          <strong style={{ color: "var(--s3)" }}>PROTECTION</strong> — on a goal or red card it
+          pulls, then re-quotes wide, then normalises. Its P&amp;L decomposes into spread
+          captured vs. adverse selection — and the defence keeps the first bigger than the second.
+        </li>
+      </ul>
+
       <h2 className="about-label">Check it yourself — three artifacts</h2>
       <p className="about-body mb10">
-        Every claim links to its evidence: <strong>record hash</strong> (open any decision,
-        copy its canonical hash) → <strong>commitment transaction</strong> (the same hash on
-        Solana Explorer, timestamped before the match ended) →{" "}
+        Every claim links to its evidence: <strong>record hash</strong> (open any quote or
+        settlement, copy its canonical hash) → <strong>commitment transaction</strong> (the same
+        hash on Solana Explorer, timestamped before the match ended) →{" "}
         <strong>proof verification</strong> (the settlement's validateStatV2 check). Worked
         example: England 1–2 Argentina, fixture 18241006, seq 962 — a TRUE claim verifies, a
         FALSE claim is rejected. Reproduce it with{" "}
@@ -83,34 +108,14 @@ export function About() {
         </div>
       </div>
 
-      <h2 className="about-label">How it thinks</h2>
-      <p className="about-body mb10">
-        SHARPE fits a joint model of each match and compares its probability for every
-        outcome against the market's implied probability. When they disagree beyond a
-        threshold — the <em>edge</em> — it acts, sizing with fractional Kelly scaled by its
-        own calibration. Three deterministic strategies:
-      </p>
-      <ul className="about-list">
-        <li>
-          <strong style={{ color: "var(--s1)" }}>S1 COHERENCE</strong> — trades markets that
-          disagree with the jointly-fitted model: pure cross-market arithmetic.
-        </li>
-        <li>
-          <strong style={{ color: "var(--s2)" }}>S2 REACTION</strong> — after a goal or red
-          card, trades quotes that lag the repricing.
-        </li>
-        <li>
-          <strong style={{ color: "var(--s3)" }}>S3 CONVERGENCE</strong> — fades quotes that
-          drifted from consensus without any match event.
-        </li>
-      </ul>
-
       <h2 className="about-label">Honest limits</h2>
       <p className="about-body" style={{ marginBottom: 0 }}>
-        This runs on Solana devnet, in paper execution unless stated otherwise. Win rates
-        hover near 50% by construction — the claim is provable honesty and positive expected
-        value, never "it always wins." Replay mode pushes recorded real matches through the
-        identical pipeline: same code, same decisions. It IS the agent, on recorded input.
+        This runs on Solana devnet, in paper execution unless stated otherwise. The flow that
+        trades against the quotes is simulated — the standard way a quoting strategy is
+        backtested — deterministically seeded from the event stream, so a replay reproduces every
+        fill exactly. The claim is a provably-honest book and a positive spread net of adverse
+        selection, never "it always wins." Replay mode pushes recorded real matches through the
+        identical pipeline: same code, same quotes. It IS the agent, on recorded input.
       </p>
     </div>
   );
