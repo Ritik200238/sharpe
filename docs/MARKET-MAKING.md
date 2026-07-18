@@ -64,8 +64,19 @@ Validation on a real-structure match, protection ON vs OFF:
 
 **The adverse-selection defence is worth +23 USDC — it turns a loss into a profit.** That is the
 maker's entire edge, and it's the sophisticated, defensible, *measurable* piece a professional
-desk would care about. (10 unit tests cover the quoting, protection, fills, and settlement;
-`npm run mm-backtest --workspace services/agent` runs the full real corpus.)
+desk would care about.
+
+Reproduce it yourself:
+
+```bash
+npm run mm-validate --workspace services/agent    # ~6s — the numbers above, on a synthetic match
+```
+
+That runs the quoting engine protection-ON then protection-OFF and prints both books, so the
+value of the defence is measured directly. (13 tests cover the maker — 10 unit tests for
+quoting, protection, fills, and settlement, plus 3 that drive a full match through the live
+agent.) `npm run mm-backtest --workspace services/agent` runs the same over the real recorded
+corpus — but real journals are large, so it takes minutes; bound it with `-- --matches N`.
 
 ## Why not directional trading
 

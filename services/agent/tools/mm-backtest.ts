@@ -1,5 +1,5 @@
 /**
- * Market-maker backtest over the real 20-match corpus.
+ * Market-maker backtest over the real recorded corpus.
  *
  * Runs the quoting engine across every recorded World Cup match and reports
  * the maker's P&L decomposed into spread captured vs adverse selection — the
@@ -7,7 +7,13 @@
  * protection DISABLED to measure, in dollars, exactly what the defence is
  * worth. Deterministic: same corpus, same numbers, every run.
  *
- *   npm run mm-backtest --workspace services/agent
+ * NOTE ON RUNTIME: real journals are large (tens of MB each), so a full-corpus
+ * run takes MINUTES, and each match logs its progress as it completes. For a
+ * fast (~2s) reproduction of the headline numbers, use `mm-validate` instead —
+ * it runs a synthetic match. Bound this run with `--matches N`.
+ *
+ *   npm run mm-backtest --workspace services/agent                 # full corpus (slow)
+ *   npm run mm-backtest --workspace services/agent -- --matches 3  # first 3 matches
  */
 import * as fs from "node:fs";
 import * as path from "node:path";
@@ -48,12 +54,26 @@ function discoverMatches(): Array<{ dir: string; fixtureId: number; startTime: n
   return out.sort((a, b) => a.startTime - b.startTime || a.fixtureId - b.fixtureId);
 }
 
+/** Optional `--matches N` cap so the slow full-corpus run can be bounded. */
+function matchLimit(): number {
+  const i = process.argv.indexOf("--matches");
+  if (i !== -1) {
+    const n = Number(process.argv[i + 1]);
+    if (Number.isFinite(n) && n > 0) return Math.floor(n);
+  }
+  return Infinity;
+}
+
 async function runCorpus(
   protectionEnabled: boolean,
+  progress: boolean,
 ): Promise<{ rows: MatchRow[]; engine: MarketMakerEngine }> {
   const engine = new MarketMakerEngine({ ...DEFAULT_MM_CONFIG, protectionEnabled });
   const rows: MatchRow[] = [];
-  for (const match of discoverMatches()) {
+  const matches = discoverMatches().slice(0, matchLimit());
+  for (let i = 0; i < matches.length; i++) {
+    const match = matches[i];
+    const t0 = process.hrtime.bigint();
     const before = engine.book.totals();
     const feed = new ReplayFeed(match.dir, 0);
     for await (const event of feed.events()) {
@@ -69,6 +89,13 @@ async function runCorpus(
       adverseUsdc: round2(after.adverseUsdc - before.adverseUsdc),
       fills: after.fills - before.fills,
     });
+    if (progress) {
+      const ms = Number(process.hrtime.bigint() - t0) / 1e6;
+      console.log(
+        `  [${String(i + 1).padStart(2)}/${matches.length}] fixture ${match.fixtureId} done ` +
+          `(${(ms / 1000).toFixed(1)}s, net ${round2(after.cashUsdc - before.cashUsdc).toFixed(2)})`,
+      );
+    }
   }
   return { rows, engine };
 }
@@ -78,11 +105,20 @@ function round2(x: number): number {
 }
 
 async function main(): Promise<void> {
-  const matches = discoverMatches();
-  console.log(`[mm-backtest] corpus: ${matches.length} real matches under ${RECORDINGS}`);
-  console.log("[mm-backtest] maker starts flat; quotes two-sided, earns the spread, defends goals\n");
+  const total = discoverMatches().length;
+  const limit = matchLimit();
+  const running = Math.min(total, limit);
+  console.log(`[mm-backtest] corpus: ${total} real matches under ${RECORDINGS}`);
+  if (limit !== Infinity && limit < total) {
+    console.log(`[mm-backtest] --matches ${limit}: running the first ${running} of ${total} (rest skipped)`);
+  }
+  console.log(
+    `[mm-backtest] real journals are large — this runs each match twice (protection on/off) and ` +
+      `takes MINUTES. For a fast check use \`npm run mm-validate\`.\n`,
+  );
 
-  const on = await runCorpus(true);
+  console.log("[mm-backtest] pass 1/2 — protection ON:");
+  const on = await runCorpus(true, true);
   console.log("  #    fixture       fills    spread$   adverse$      net$");
   console.log("-------------------------------------------------------------");
   on.rows.forEach((r, i) => {
@@ -103,7 +139,8 @@ async function main(): Promise<void> {
       `toxic flow deflected ${s.informedDeflected} / filled ${s.informedFilled}`,
   );
 
-  const off = await runCorpus(false);
+  console.log("\n[mm-backtest] pass 2/2 — protection OFF (to measure the defence):");
+  const off = await runCorpus(false, true);
   const t2 = off.engine.book.totals();
   const s2 = off.engine.stats;
   console.log(

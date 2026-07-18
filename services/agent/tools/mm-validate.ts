@@ -1,14 +1,32 @@
-/** Quick single-match MM validation with timing — confirms the maker earns a
- * positive spread and that protection helps, before the full-corpus run. */
+/** Fast market-maker validation — the quick way to reproduce the headline
+ * numbers. With no argument it runs a deterministic SYNTHETIC match (a 2-1
+ * thriller with in-running quotes on four markets), which finishes in ~2s and
+ * produces the figures cited in docs/MARKET-MAKING.md. Pass a recording dir to
+ * validate a real match instead (slower — real journals are large).
+ *
+ *   npm run mm-validate --workspace services/agent            # synthetic, fast
+ *   npx tsx tools/mm-validate.ts <recording-dir>              # a real match
+ *
+ * Runs the quoting engine with the adverse-selection protection ON, then OFF,
+ * so the dollar value of the defence is measured directly. Deterministic.
+ */
+import * as fs from "node:fs";
+import * as os from "node:os";
 import * as path from "node:path";
 import { ReplayFeed } from "../src/feed/replay";
 import { DEFAULT_MM_CONFIG, MarketMakerEngine } from "../src/mm/engine";
+import { synthesizeMatch, writeJournals } from "./synthesize";
 
-const dir =
-  process.argv[2] ??
-  path.resolve(__dirname, "..", "..", "..", "data", "recordings", "devnet", "backfill-18241006");
+/** Resolve the match dir: an explicit arg, or a freshly-synthesized match. */
+function resolveDir(): { dir: string; label: string; cleanup: () => void } {
+  const arg = process.argv[2];
+  if (arg) return { dir: arg, label: `real recording ${path.basename(arg)}`, cleanup: () => {} };
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "sharpe-mm-validate-"));
+  writeJournals(dir, synthesizeMatch(42));
+  return { dir, label: "synthetic match (seed 42)", cleanup: () => fs.rmSync(dir, { recursive: true, force: true }) };
+}
 
-async function run(protectionEnabled: boolean): Promise<void> {
+async function run(dir: string, protectionEnabled: boolean): Promise<void> {
   const t0 = process.hrtime.bigint();
   const eng = new MarketMakerEngine({ ...DEFAULT_MM_CONFIG, protectionEnabled });
   const feed = new ReplayFeed(dir, 0);
@@ -28,8 +46,14 @@ async function run(protectionEnabled: boolean): Promise<void> {
 }
 
 (async () => {
-  await run(true);
-  await run(false);
+  const { dir, label, cleanup } = resolveDir();
+  console.log(`[mm-validate] ${label}\n`);
+  try {
+    await run(dir, true);
+    await run(dir, false);
+  } finally {
+    cleanup();
+  }
 })().catch((e) => {
   console.error(e);
   process.exit(1);
