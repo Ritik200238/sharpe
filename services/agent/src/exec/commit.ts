@@ -213,8 +213,14 @@ export class ChainCommitter {
           programId: MEMO_PROGRAM_ID,
           data: Buffer.from(memo, "utf8"),
         });
+        // The Memo program validates UTF-8 and logs the message, which costs
+        // real compute: an ~85-byte `sharpe:v1:<kind>:<64-hex>` memo measures
+        // at ~45k CU on devnet. The old 5k cap made EVERY commitment fail
+        // simulation ("ProgramFailedToComplete"); 100k clears it with margin.
+        // We set no compute-unit *price*, so the flat per-signature fee is
+        // unchanged by this limit — a higher ceiling costs nothing here.
         const tx = new Transaction().add(
-          ComputeBudgetProgram.setComputeUnitLimit({ units: 5_000 }),
+          ComputeBudgetProgram.setComputeUnitLimit({ units: 100_000 }),
           instruction,
         );
         const latest = await this.connection.getLatestBlockhash("confirmed");
