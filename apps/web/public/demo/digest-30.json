@@ -1,8 +1,8 @@
 {
-  "hash": "203e14f3c43532d7f5dc3ef4716f6c40bf5cbe421eb749afd1c8947a3d6f766e",
-  "generatedAtTs": 1784359925182,
+  "hash": "36c769b6e57db893debdcdd5c32595a833164f1ed28b3c3cf350019253d395f7",
+  "generatedAtTs": 1784366372372,
   "windowDays": 30,
-  "windowStartTs": 1781767925182,
+  "windowStartTs": 1781774372372,
   "strategies": [
     {
       "strategy": "S1_COHERENCE",
@@ -14,8 +14,8 @@
       "roi": -0.3187,
       "brier": 0.2064,
       "meanEdge": 0.0721,
-      "lastDecisionTs": 1784356308840,
-      "lastSettlementTs": 1784359186840,
+      "lastDecisionTs": 1784362753774,
+      "lastSettlementTs": 1784365631774,
       "activity": "active"
     },
     {
@@ -28,8 +28,8 @@
       "roi": 1.0131,
       "brier": 0.1365,
       "meanEdge": 0.2201,
-      "lastDecisionTs": 1784354206840,
-      "lastSettlementTs": 1784359186840,
+      "lastDecisionTs": 1784360651774,
+      "lastSettlementTs": 1784365631774,
       "activity": "active"
     },
     {

@@ -52,9 +52,11 @@ export function App() {
         {DEMO_MODE ? (
           <div className="demo-banner" role="status">
             <strong>Live demo</strong> — a demonstration match played through the real agent
-            pipeline (the exact code that runs on live TxLINE data). The on-chain proofs linked
-            on the About page are real devnet transactions. Point this at a live agent any time
-            with <code>?api=&lt;url&gt;</code>.
+            pipeline (the exact code that runs on live TxLINE data). The on-chain proofs — the
+            agent's real quote-book commits and the <code>validateStatV2</code> settlement proof —
+            are linked on the About page and reproducible with{" "}
+            <code>tools/verify-proof.ts</code>. Point this at a live agent with{" "}
+            <code>?api=&lt;url&gt;</code>.
           </div>
         ) : null}
         {state.connection === "dead" && !DEMO_MODE ? (

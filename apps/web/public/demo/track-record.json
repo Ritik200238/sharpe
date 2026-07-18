@@ -9,8 +9,8 @@
   },
   "decisions": [
     {
-      "hash": "ddd873dd0549e637223d89eddac4d646745c3d432fa820672c7a7a7005a88e02",
-      "decidedAtTs": 1784356308840,
+      "hash": "987cf6909e044e06aec3b6a040f71897e33059bcd54afe1c4245372f4c3c1cba",
+      "decidedAtTs": 1784362753774,
       "mode": "paper",
       "strategy": "S1_COHERENCE",
       "fixtureId": 90000001,
@@ -33,16 +33,16 @@
       },
       "inputs": {
         "scoreSeq": 3,
-        "scoreTs": 1784356306840,
-        "oddsMessageId": "m-1784356308840-Total Goals",
-        "oddsTs": 1784356308840,
+        "scoreTs": 1784362751774,
+        "oddsMessageId": "m-1784362753774-Total Goals",
+        "oddsTs": 1784362753774,
         "lambdaHome": 1.6244580923099723,
         "lambdaAway": 1.2668370587969853
       }
     },
     {
-      "hash": "5be451809a03a3e8a84c3c61f4c3383d6c6eaa6a22abd9b2dacf1eb56700d603",
-      "decidedAtTs": 1784356308840,
+      "hash": "a26adcc1909f4e7f9549fdc753510f505579a0fda006948c7aa8df389ea86de0",
+      "decidedAtTs": 1784362753774,
       "mode": "paper",
       "strategy": "S1_COHERENCE",
       "fixtureId": 90000001,
@@ -65,16 +65,16 @@
       },
       "inputs": {
         "scoreSeq": 3,
-        "scoreTs": 1784356306840,
-        "oddsMessageId": "m-1784356308840-Total Goals",
-        "oddsTs": 1784356308840,
+        "scoreTs": 1784362751774,
+        "oddsMessageId": "m-1784362753774-Total Goals",
+        "oddsTs": 1784362753774,
         "lambdaHome": 1.6244580923099723,
         "lambdaAway": 1.2668370587969853
       }
     },
     {
-      "hash": "464f95fe6326b2cb27ed86569dde9094b11e10dd15deb75b638ab301b4a8c459",
-      "decidedAtTs": 1784354206840,
+      "hash": "37fb98e343a71c65ec8f84f654e3f5b79f29bc292ff2e439faeea41e734afa9a",
+      "decidedAtTs": 1784360651774,
       "mode": "paper",
       "strategy": "S2_REACTION",
       "fixtureId": 90000001,
@@ -96,16 +96,16 @@
       },
       "inputs": {
         "scoreSeq": 2,
-        "scoreTs": 1784354206840,
-        "oddsMessageId": "m-1784353908840-1X2",
-        "oddsTs": 1784353908840,
+        "scoreTs": 1784360651774,
+        "oddsMessageId": "m-1784360353774-1X2",
+        "oddsTs": 1784360353774,
         "lambdaHome": 1.6244580923099723,
         "lambdaAway": 1.2668370587969853
       }
     },
     {
-      "hash": "e11c7c9084699b5d876ea93782a56800408789d445a73a326d14792d12e43897",
-      "decidedAtTs": 1784354206840,
+      "hash": "b64f68a008b64897c1d53e4795762f474cb89f6bac84fc75441cefcf9d9af2d1",
+      "decidedAtTs": 1784360651774,
       "mode": "paper",
       "strategy": "S2_REACTION",
       "fixtureId": 90000001,
@@ -128,16 +128,16 @@
       },
       "inputs": {
         "scoreSeq": 2,
-        "scoreTs": 1784354206840,
-        "oddsMessageId": "m-1784353908840-Total Goals",
-        "oddsTs": 1784353908840,
+        "scoreTs": 1784360651774,
+        "oddsMessageId": "m-1784360353774-Total Goals",
+        "oddsTs": 1784360353774,
         "lambdaHome": 1.6244580923099723,
         "lambdaAway": 1.2668370587969853
       }
     },
     {
-      "hash": "cd30b46500161c8b1e2b9dc02bb5fa7816fb1443ec23b9aad201d1d7839cbbd8",
-      "decidedAtTs": 1784354206840,
+      "hash": "d9ec198434cef995300c36fb702677abd756f4ce725a6d6532edf96bfee0df4e",
+      "decidedAtTs": 1784360651774,
       "mode": "paper",
       "strategy": "S2_REACTION",
       "fixtureId": 90000001,
@@ -160,16 +160,16 @@
       },
       "inputs": {
         "scoreSeq": 2,
-        "scoreTs": 1784354206840,
-        "oddsMessageId": "m-1784353908840-Total Goals",
-        "oddsTs": 1784353908840,
+        "scoreTs": 1784360651774,
+        "oddsMessageId": "m-1784360353774-Total Goals",
+        "oddsTs": 1784360353774,
         "lambdaHome": 1.6244580923099723,
         "lambdaAway": 1.2668370587969853
       }
     },
     {
-      "hash": "716dddc7f80fc712468da4d656f0692c9866e58e10a9904d79978118801448c4",
-      "decidedAtTs": 1784354206840,
+      "hash": "f75a16606808e8e158052af6d6d45bc6936e2eecf8ac8cab400f3b02f4e4ab79",
+      "decidedAtTs": 1784360651774,
       "mode": "paper",
       "strategy": "S2_REACTION",
       "fixtureId": 90000001,
@@ -191,9 +191,9 @@
       },
       "inputs": {
         "scoreSeq": 2,
-        "scoreTs": 1784354206840,
-        "oddsMessageId": "m-1784353908840-Both Teams To Score",
-        "oddsTs": 1784353908840,
+        "scoreTs": 1784360651774,
+        "oddsMessageId": "m-1784360353774-Both Teams To Score",
+        "oddsTs": 1784360353774,
         "lambdaHome": 1.6244580923099723,
         "lambdaAway": 1.2668370587969853
       }
@@ -201,8 +201,8 @@
   ],
   "settlements": [
     {
-      "decisionHash": "464f95fe6326b2cb27ed86569dde9094b11e10dd15deb75b638ab301b4a8c459",
-      "settledAtTs": 1784359186840,
+      "decisionHash": "37fb98e343a71c65ec8f84f654e3f5b79f29bc292ff2e439faeea41e734afa9a",
+      "settledAtTs": 1784365631774,
       "fixtureId": 90000001,
       "won": true,
       "pnlUsdc": 139.81,
@@ -210,8 +210,8 @@
       "finalP2Goals": 2
     },
     {
-      "decisionHash": "e11c7c9084699b5d876ea93782a56800408789d445a73a326d14792d12e43897",
-      "settledAtTs": 1784359186840,
+      "decisionHash": "b64f68a008b64897c1d53e4795762f474cb89f6bac84fc75441cefcf9d9af2d1",
+      "settledAtTs": 1784365631774,
       "fixtureId": 90000001,
       "won": true,
       "pnlUsdc": 43.82,
@@ -219,8 +219,8 @@
       "finalP2Goals": 2
     },
     {
-      "decisionHash": "cd30b46500161c8b1e2b9dc02bb5fa7816fb1443ec23b9aad201d1d7839cbbd8",
-      "settledAtTs": 1784359186840,
+      "decisionHash": "d9ec198434cef995300c36fb702677abd756f4ce725a6d6532edf96bfee0df4e",
+      "settledAtTs": 1784365631774,
       "fixtureId": 90000001,
       "won": false,
       "pnlUsdc": -38.82,
@@ -228,8 +228,8 @@
       "finalP2Goals": 2
     },
     {
-      "decisionHash": "716dddc7f80fc712468da4d656f0692c9866e58e10a9904d79978118801448c4",
-      "settledAtTs": 1784359186840,
+      "decisionHash": "f75a16606808e8e158052af6d6d45bc6936e2eecf8ac8cab400f3b02f4e4ab79",
+      "settledAtTs": 1784365631774,
       "fixtureId": 90000001,
       "won": true,
       "pnlUsdc": 46.48,
@@ -237,8 +237,8 @@
       "finalP2Goals": 2
     },
     {
-      "decisionHash": "ddd873dd0549e637223d89eddac4d646745c3d432fa820672c7a7a7005a88e02",
-      "settledAtTs": 1784359186840,
+      "decisionHash": "987cf6909e044e06aec3b6a040f71897e33059bcd54afe1c4245372f4c3c1cba",
+      "settledAtTs": 1784365631774,
       "fixtureId": 90000001,
       "won": false,
       "pnlUsdc": -28.29,
@@ -246,8 +246,8 @@
       "finalP2Goals": 2
     },
     {
-      "decisionHash": "5be451809a03a3e8a84c3c61f4c3383d6c6eaa6a22abd9b2dacf1eb56700d603",
-      "settledAtTs": 1784359186840,
+      "decisionHash": "a26adcc1909f4e7f9549fdc753510f505579a0fda006948c7aa8df389ea86de0",
+      "settledAtTs": 1784365631774,
       "fixtureId": 90000001,
       "won": true,
       "pnlUsdc": 8.79,
@@ -257,9 +257,9 @@
   ],
   "reviews": [
     {
-      "hash": "f1928e556d31848c7d714cc40cfda0459f77d17747ea854c8954cd1d6bf78351",
+      "hash": "b3ce9614fc26886c5765f77da1b00c70618f4deaea909b79019467e39aafb6bf",
       "fixtureId": 90000001,
-      "generatedAtTs": 1784359186840,
+      "generatedAtTs": 1784365631774,
       "decisions": 6,
       "wins": 4,
       "losses": 2,

@@ -1,5 +1,5 @@
 {
-  "startedAtTs": 1784359906847,
+  "startedAtTs": 1784366351787,
   "network": "devnet",
   "feedMode": "replay",
   "execMode": "paper",
@@ -8,8 +8,8 @@
     "odds": 204,
     "heartbeat": 0
   },
-  "lastEventTs": 1784359186840,
-  "lastEventRecvTs": 1784359187240,
+  "lastEventTs": 1784365631774,
+  "lastEventRecvTs": 1784365632174,
   "liveFixtures": 0,
   "trackedMarkets": 4,
   "equityUsdc": 2171.79,
@@ -60,121 +60,121 @@
       "reason": "identical position already open",
       "strategy": "S1_COHERENCE",
       "marketKey": "1X2|FT|",
-      "ts": 1784359008840
+      "ts": 1784365453774
     },
     {
       "reason": "identical position already open",
       "strategy": "S1_COHERENCE",
       "marketKey": "Total Goals|FT|2.5",
-      "ts": 1784359008840
+      "ts": 1784365453774
     },
     {
       "reason": "identical position already open",
       "strategy": "S1_COHERENCE",
       "marketKey": "Total Goals|FT|3.5",
-      "ts": 1784359008840
+      "ts": 1784365453774
     },
     {
       "reason": "identical position already open",
       "strategy": "S1_COHERENCE",
       "marketKey": "Both Teams To Score|FT|",
-      "ts": 1784359008840
+      "ts": 1784365453774
     },
     {
       "reason": "identical position already open",
       "strategy": "S1_COHERENCE",
       "marketKey": "1X2|FT|",
-      "ts": 1784359008840
+      "ts": 1784365453774
     },
     {
       "reason": "identical position already open",
       "strategy": "S1_COHERENCE",
       "marketKey": "Total Goals|FT|2.5",
-      "ts": 1784359008840
+      "ts": 1784365453774
     },
     {
       "reason": "identical position already open",
       "strategy": "S1_COHERENCE",
       "marketKey": "Total Goals|FT|3.5",
-      "ts": 1784359008840
+      "ts": 1784365453774
     },
     {
       "reason": "identical position already open",
       "strategy": "S1_COHERENCE",
       "marketKey": "Both Teams To Score|FT|",
-      "ts": 1784359008840
+      "ts": 1784365453774
     },
     {
       "reason": "identical position already open",
       "strategy": "S3_CONVERGENCE",
       "marketKey": "Total Goals|FT|2.5",
-      "ts": 1784359008840
+      "ts": 1784365453774
     },
     {
       "reason": "identical position already open",
       "strategy": "S1_COHERENCE",
       "marketKey": "1X2|FT|",
-      "ts": 1784359008840
+      "ts": 1784365453774
     },
     {
       "reason": "identical position already open",
       "strategy": "S1_COHERENCE",
       "marketKey": "Total Goals|FT|2.5",
-      "ts": 1784359008840
+      "ts": 1784365453774
     },
     {
       "reason": "identical position already open",
       "strategy": "S1_COHERENCE",
       "marketKey": "Total Goals|FT|3.5",
-      "ts": 1784359008840
+      "ts": 1784365453774
     },
     {
       "reason": "identical position already open",
       "strategy": "S1_COHERENCE",
       "marketKey": "Both Teams To Score|FT|",
-      "ts": 1784359008840
+      "ts": 1784365453774
     },
     {
       "reason": "identical position already open",
       "strategy": "S3_CONVERGENCE",
       "marketKey": "Total Goals|FT|2.5",
-      "ts": 1784359008840
+      "ts": 1784365453774
     },
     {
       "reason": "identical position already open",
       "strategy": "S1_COHERENCE",
       "marketKey": "1X2|FT|",
-      "ts": 1784359008840
+      "ts": 1784365453774
     },
     {
       "reason": "identical position already open",
       "strategy": "S1_COHERENCE",
       "marketKey": "Total Goals|FT|2.5",
-      "ts": 1784359008840
+      "ts": 1784365453774
     },
     {
       "reason": "identical position already open",
       "strategy": "S1_COHERENCE",
       "marketKey": "Total Goals|FT|3.5",
-      "ts": 1784359008840
+      "ts": 1784365453774
     },
     {
       "reason": "identical position already open",
       "strategy": "S1_COHERENCE",
       "marketKey": "Both Teams To Score|FT|",
-      "ts": 1784359008840
+      "ts": 1784365453774
     },
     {
       "reason": "identical position already open",
       "strategy": "S3_CONVERGENCE",
       "marketKey": "Total Goals|FT|2.5",
-      "ts": 1784359008840
+      "ts": 1784365453774
     },
     {
       "reason": "identical position already open",
       "strategy": "S3_CONVERGENCE",
       "marketKey": "Both Teams To Score|FT|",
-      "ts": 1784359008840
+      "ts": 1784365453774
     }
   ],
   "mm": {

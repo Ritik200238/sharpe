@@ -95,10 +95,11 @@ export function Command() {
       ) : null}
 
       <div className="research-caption">
-        Directional research layer (paper) — the fair-value engine the maker prices off. This one
-        demonstration match happened to profit, but across 20 real matches directional trading
-        loses <strong>−18.6% ROI</strong> (you can't beat TxLINE's de-margined consensus) — which
-        is exactly why SHARPE's job is market-making, not betting.
+        Directional research layer (paper) — the fair-value engine the maker prices off. A single
+        match's directional P&L is noise; across 20 real matches directional trading loses{" "}
+        <strong>−18.6% ROI</strong> (you can't beat TxLINE's de-margined consensus), while the
+        maker earns the spread either way. That's exactly why SHARPE's job is market-making, not
+        betting.
       </div>
 
       <div className="vitals-grid">
