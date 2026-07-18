@@ -39,31 +39,44 @@ The settlement predicate mapping is already built and tested off-chain
 TOTAL_GOALS / BTTS), so porting it into a `market` CPI is a well-scoped, low-unknown task
 once the toolchain is available.
 
-## Why this directory ships as design, not code, tonight — honest status
+## Why this directory ships as design, not code — honest status (we tried, empirically)
 
 Building on the principle *"nothing half-baked — no stubs pretending to be features"*
 (`CLAUDE.md`), we do **not** commit uncompiled, untested Anchor programs and call them
-done. The blocker is environmental, not conceptual:
+done. The blocker is environmental, not conceptual — and we confirmed it by actually
+attempting the build four different ways, not by theorizing:
 
-- `cargo-build-sbf` (Agave 4.1) compiles a program's host-side build scripts
-  (proc-macro2, serde, quote) with the platform-tools Rust toolchain targeting the host,
-  which requires the **MSVC `link.exe`**. This machine has Visual Studio 2022 **Build
-  Tools installed without the C++ workload**, so `link.exe` is absent →
-  `error: linker 'link.exe' not found`.
-- Verified working: `solana-cli 4.1.2`, `cargo-build-sbf 4.1.0`, host Rust via the **GNU**
-  toolchain (`cargo +stable-x86_64-pc-windows-gnu build` succeeds). But `cargo-build-sbf`
-  pins its own toolchain for host artifacts and does not honor a per-directory GNU
-  override, so the GNU linker isn't picked up for the SBF build's proc-macros.
+1. **`cargo-build-sbf` directly** (Agave 4.1.2 / platform-tools v1.54, both installed and
+   working). The SBF program object links fine with `rust-lld`, but the host-side
+   `build.rs` scripts of universal deps (`proc-macro2`, `serde_core`, `quote`) must link a
+   native Windows binary → invokes **MSVC `link.exe`**, which is absent (VS 2022 Build
+   Tools are installed **without the C++ workload**). → `linking with link.exe failed`.
+2. **Checked for the MSVC SDK/CRT directly** — `link.exe`, `msvcrt.lib`, and the Windows
+   SDK import libs (`kernel32.lib`, …) are **not present anywhere on the machine**, so even
+   redirecting to `rust-lld` (which *is* available) can't link — there are no import libs.
+3. **GNU host toolchain** (`stable-x86_64-pc-windows-gnu`, bundled linker). Trivial crates
+   build, but anything needing an import lib (`windows-sys`) fails: the bundled `dlltool`
+   errors with `CreateProcess` — the shipped mingw is **incomplete** (no assembler).
+4. **`xwin`** (the standard *no-admin* way to fetch the MSVC CRT + SDK into a user dir).
+   Building `xwin` itself needs `windows-sys` → blocked by the same incomplete-`dlltool`
+   failure as (3).
 
-### Unblock (either path)
+Every autonomous path is walled off by a missing **native-Windows toolchain** component,
+and every fix is a **system-level install requiring an elevation prompt** a sleeping
+operator can't approve. Forcing that, then rushing three *untested* on-chain programs
+before morning, would violate the "built fully" bar. This is the disciplined call —
+documented in the open, with the real errors above.
 
-- **MSVC:** install the "Desktop development with C++" workload —
-  `Microsoft.VisualStudio.Component.VC.Tools.x86.x64` — via the Visual Studio Build Tools
-  installer (needs elevation), then `cargo-build-sbf` works natively.
+### Unblock (any one — ~30–60 min)
+
 - **WSL (recommended for Solana on Windows):** `wsl --install`, then the standard Linux
   Agave + Anchor toolchain builds cleanly with no MSVC dependency.
+- **MSVC:** install the "Desktop development with C++" workload
+  (`Microsoft.VisualStudio.Component.VC.Tools.x86.x64`) via the VS Build Tools installer
+  (needs elevation), then `cargo-build-sbf` works natively.
+- **Docker:** any `solanalabs`/`backpackapp` build image compiles it in a container.
 
-Either is a ~30–60 minute setup; neither was run autonomously overnight because both are
-system-level installs requiring an elevation prompt a sleeping operator can't approve, and
-because forcing a large risky install to then rush three untested programs before morning
-would violate the "built fully" bar. This is the disciplined call, documented in the open.
+Once any of these is in place, the three programs above are a well-scoped build: the
+settlement predicate mapping is already implemented and unit-tested off-chain
+(`services/agent/src/settle/proofs.ts`), and the Memo commitment path the `registry`
+supersedes is already live on devnet.
