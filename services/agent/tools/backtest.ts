@@ -326,13 +326,15 @@ async function runMatch(
           : 0;
       open.delete(decision.hash);
 
-      // Learn — identical order and inputs to Agent.settleFixture.
-      intel.calibration.add({
-        modelProb: decision.modelProb,
-        marketProb: decision.marketProb,
-        won,
-      });
+      // Learn — identical order and inputs to Agent.settleFixture. Shadow
+      // (stake-0) settlements feed ONLY the SPRT; they must not move the
+      // global calibration/allocation that size healthy strategies.
       if (decision.stakeUsdc > 0) {
+        intel.calibration.add({
+          modelProb: decision.modelProb,
+          marketProb: decision.marketProb,
+          won,
+        });
         intel.allocation.recordSettlement(decision.strategy, pnlUsdc, decision.stakeUsdc);
       }
       const wasSuspended = intel.suspension.isSuspended(decision.strategy);
