@@ -4,7 +4,7 @@
 
 <br/>
 
-[![tests](https://img.shields.io/badge/tests-49%20passing-4bd1a0?style=flat-square&logo=github)](services/agent/test)
+[![tests](https://img.shields.io/badge/tests-53%20passing-4bd1a0?style=flat-square&logo=github)](services/agent/test)
 [![determinism](https://img.shields.io/badge/determinism-bit--for--bit-4bd1a0?style=flat-square)](services/agent/test/determinism.test.ts)
 [![typescript](https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square&logo=typescript&logoColor=white)](tsconfig.base.json)
 [![solana](https://img.shields.io/badge/Solana-devnet-9945FF?style=flat-square&logo=solana)](https://explorer.solana.com/?cluster=devnet)

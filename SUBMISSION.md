@@ -17,7 +17,7 @@ structural loser we measured at −18.6% ROI — it provides liquidity *around* 
 | Requirement | Status | Where |
 |---|---|---|
 | **Public GitHub repo** | ✅ done | https://github.com/Ritik200238/sharpe |
-| **Working build (not a concept)** | ✅ done | 49 tests green; agent runs live on devnet; frontend builds |
+| **Working build (not a concept)** | ✅ done | 53 tests green; agent runs live on devnet; frontend builds |
 | **TxLINE as primary data source** | ✅ done | live SSE scores+odds, historical backfill, settlement proofs (list below) |
 | **Solana signup** | ✅ done | on-chain free-tier subscription tx `XeNPJG…x6Kxm` (devnet) |
 | **Demo video (≤5 min)** | ⏳ **operator action** | turnkey shot-by-shot script in `DEMOVIDEO.md` — ~20 min to record |
@@ -86,7 +86,7 @@ a *final* stat vs an in-running one is subtle.
 |---|---|---|
 | 1 | **Core Functionality & Data Ingestion** | Dual live SSE ingestion + raw-fidelity journals + replay-identical pipeline; a **20-match real World Cup corpus**; runs live on devnet right now. |
 | 2 | **Autonomous Operation** | One command → discovers fixtures, prices fair value, **quotes both sides**, fills flow, defends around goals, commits, settles, and self-recovers from crashes. Zero human input after start (config at deploy only). |
-| 3 | **Logic & Code Architecture** | Deterministic glass-box: every quote carries its math (fair value, spread, inventory skew, protection phase) + a plain-English reason; bit-for-bit determinism proven by test (and confirmed identical across independent real-data runs); 49 tests; frozen decision-path discipline. |
+| 3 | **Logic & Code Architecture** | Deterministic glass-box: every quote carries its math (fair value, spread, inventory skew, protection phase) + a plain-English reason; bit-for-bit determinism proven by test (and confirmed identical across independent real-data runs); 53 tests; frozen decision-path discipline. |
 | 4 | **Innovation & Novelty** | An in-play **market maker with an adverse-selection defence** (pull-then-widen around goals, measured to turn a −7 loss into a +16 profit) whose whole book is **committed on-chain before outcomes exist** and settled by Merkle proof — a liquidity provider you can *audit*. Not a feed reskin, not a GPT wrapper, not another doomed attempt to out-predict the consensus. |
 | 5 | **Production Readiness** | Write-ahead commit journal + boot reconcile, full state rebuilt from ledger on `kill -9`, self-healing feeds, inventory + exposure caps, Docker deploy, live 24/7. |
 
@@ -127,7 +127,7 @@ pull/widen defence, deterministic fill model, P&L book) validated ON vs OFF (−
 protection worth +23) · intelligence layer (calibration, UCB allocation, SPRT self-suspension,
 self-reviews) · risk engine · append-only track record · on-chain commitments (write-ahead +
 reconcile) — **decisions AND quote-book snapshots verified landing on devnet** (links above) ·
-`validateStatV2` settlement proven on a real semifinal · 49 tests (incl. 13 MM) ·
+`validateStatV2` settlement proven on a real semifinal · 53 tests (incl. 13 MM + registry) ·
 TxLINE signup + 20-match corpus · production frontend (Market Making + 7 views, browser-verified) ·
 Docker/Vercel deploy configs · backtest harness with an honest tuning progression. *(The
 measured −18.6% ROI of directional trading is exactly why the job is market-making — see
