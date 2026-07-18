@@ -1,0 +1,37 @@
+[
+  {
+    "hash": "f1928e556d31848c7d714cc40cfda0459f77d17747ea854c8954cd1d6bf78351",
+    "fixtureId": 90000001,
+    "generatedAtTs": 1784359186840,
+    "decisions": 6,
+    "wins": 4,
+    "losses": 2,
+    "stakedUsdc": 250,
+    "pnlUsdc": 171.79,
+    "meanModelProb": 0.6622,
+    "realizedHitRate": 0.6667,
+    "calibrationAfter": {
+      "samples": 6,
+      "modelBrier": 0.1598199333333333,
+      "marketBrier": 0.2378582966666666,
+      "advantage": 0.0780383633333333,
+      "factor": 1
+    },
+    "perStrategy": {
+      "S2_REACTION": {
+        "n": 4,
+        "wins": 3,
+        "pnlUsdc": 191.29
+      },
+      "S1_COHERENCE": {
+        "n": 2,
+        "wins": 1,
+        "pnlUsdc": -19.5
+      }
+    },
+    "notes": [
+      "Predictions and outcomes consistent this match.",
+      "S1_COHERENCE: 2 decisions, 1 wins, -19.5 USDC — under SPRT watch."
+    ]
+  }
+]

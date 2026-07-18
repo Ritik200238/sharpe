@@ -1,0 +1,56 @@
+[
+  {
+    "decisionHash": "464f95fe6326b2cb27ed86569dde9094b11e10dd15deb75b638ab301b4a8c459",
+    "settledAtTs": 1784359186840,
+    "fixtureId": 90000001,
+    "won": true,
+    "pnlUsdc": 139.81,
+    "finalP1Goals": 1,
+    "finalP2Goals": 2
+  },
+  {
+    "decisionHash": "e11c7c9084699b5d876ea93782a56800408789d445a73a326d14792d12e43897",
+    "settledAtTs": 1784359186840,
+    "fixtureId": 90000001,
+    "won": true,
+    "pnlUsdc": 43.82,
+    "finalP1Goals": 1,
+    "finalP2Goals": 2
+  },
+  {
+    "decisionHash": "cd30b46500161c8b1e2b9dc02bb5fa7816fb1443ec23b9aad201d1d7839cbbd8",
+    "settledAtTs": 1784359186840,
+    "fixtureId": 90000001,
+    "won": false,
+    "pnlUsdc": -38.82,
+    "finalP1Goals": 1,
+    "finalP2Goals": 2
+  },
+  {
+    "decisionHash": "716dddc7f80fc712468da4d656f0692c9866e58e10a9904d79978118801448c4",
+    "settledAtTs": 1784359186840,
+    "fixtureId": 90000001,
+    "won": true,
+    "pnlUsdc": 46.48,
+    "finalP1Goals": 1,
+    "finalP2Goals": 2
+  },
+  {
+    "decisionHash": "ddd873dd0549e637223d89eddac4d646745c3d432fa820672c7a7a7005a88e02",
+    "settledAtTs": 1784359186840,
+    "fixtureId": 90000001,
+    "won": false,
+    "pnlUsdc": -28.29,
+    "finalP1Goals": 1,
+    "finalP2Goals": 2
+  },
+  {
+    "decisionHash": "5be451809a03a3e8a84c3c61f4c3383d6c6eaa6a22abd9b2dacf1eb56700d603",
+    "settledAtTs": 1784359186840,
+    "fixtureId": 90000001,
+    "won": true,
+    "pnlUsdc": 8.79,
+    "finalP1Goals": 1,
+    "finalP2Goals": 2
+  }
+]

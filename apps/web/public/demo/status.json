@@ -1,0 +1,191 @@
+{
+  "startedAtTs": 1784359906847,
+  "network": "devnet",
+  "feedMode": "replay",
+  "execMode": "paper",
+  "eventsSeen": {
+    "score": 8,
+    "odds": 204,
+    "heartbeat": 0
+  },
+  "lastEventTs": 1784359186840,
+  "lastEventRecvTs": 1784359187240,
+  "liveFixtures": 0,
+  "trackedMarkets": 4,
+  "equityUsdc": 2171.79,
+  "realizedUsdc": 2171.79,
+  "peakRealizedUsdc": 2191.29,
+  "allocations": {
+    "S1_COHERENCE": 0.264,
+    "S2_REACTION": 0.462,
+    "S3_CONVERGENCE": 0.274
+  },
+  "calibration": {
+    "samples": 6,
+    "modelBrier": 0.1598199333333333,
+    "marketBrier": 0.2378582966666666,
+    "advantage": 0.0780383633333333,
+    "factor": 1
+  },
+  "suspensions": {
+    "S1_COHERENCE": {
+      "llr": 0.11308729585515687,
+      "suspended": false,
+      "shadowWins": 0,
+      "suspensions": 0
+    },
+    "S2_REACTION": {
+      "llr": -0.31975698158722826,
+      "suspended": false,
+      "shadowWins": 0,
+      "suspensions": 0
+    },
+    "S3_CONVERGENCE": {
+      "llr": 0,
+      "suspended": false,
+      "shadowWins": 0,
+      "suspensions": 0
+    }
+  },
+  "aggregates": {
+    "decisions": 6,
+    "settled": 6,
+    "wins": 4,
+    "stakedUsdc": 250,
+    "pnlUsdc": 171.79,
+    "openPositions": 0
+  },
+  "recentVetoes": [
+    {
+      "reason": "identical position already open",
+      "strategy": "S1_COHERENCE",
+      "marketKey": "1X2|FT|",
+      "ts": 1784359008840
+    },
+    {
+      "reason": "identical position already open",
+      "strategy": "S1_COHERENCE",
+      "marketKey": "Total Goals|FT|2.5",
+      "ts": 1784359008840
+    },
+    {
+      "reason": "identical position already open",
+      "strategy": "S1_COHERENCE",
+      "marketKey": "Total Goals|FT|3.5",
+      "ts": 1784359008840
+    },
+    {
+      "reason": "identical position already open",
+      "strategy": "S1_COHERENCE",
+      "marketKey": "Both Teams To Score|FT|",
+      "ts": 1784359008840
+    },
+    {
+      "reason": "identical position already open",
+      "strategy": "S1_COHERENCE",
+      "marketKey": "1X2|FT|",
+      "ts": 1784359008840
+    },
+    {
+      "reason": "identical position already open",
+      "strategy": "S1_COHERENCE",
+      "marketKey": "Total Goals|FT|2.5",
+      "ts": 1784359008840
+    },
+    {
+      "reason": "identical position already open",
+      "strategy": "S1_COHERENCE",
+      "marketKey": "Total Goals|FT|3.5",
+      "ts": 1784359008840
+    },
+    {
+      "reason": "identical position already open",
+      "strategy": "S1_COHERENCE",
+      "marketKey": "Both Teams To Score|FT|",
+      "ts": 1784359008840
+    },
+    {
+      "reason": "identical position already open",
+      "strategy": "S3_CONVERGENCE",
+      "marketKey": "Total Goals|FT|2.5",
+      "ts": 1784359008840
+    },
+    {
+      "reason": "identical position already open",
+      "strategy": "S1_COHERENCE",
+      "marketKey": "1X2|FT|",
+      "ts": 1784359008840
+    },
+    {
+      "reason": "identical position already open",
+      "strategy": "S1_COHERENCE",
+      "marketKey": "Total Goals|FT|2.5",
+      "ts": 1784359008840
+    },
+    {
+      "reason": "identical position already open",
+      "strategy": "S1_COHERENCE",
+      "marketKey": "Total Goals|FT|3.5",
+      "ts": 1784359008840
+    },
+    {
+      "reason": "identical position already open",
+      "strategy": "S1_COHERENCE",
+      "marketKey": "Both Teams To Score|FT|",
+      "ts": 1784359008840
+    },
+    {
+      "reason": "identical position already open",
+      "strategy": "S3_CONVERGENCE",
+      "marketKey": "Total Goals|FT|2.5",
+      "ts": 1784359008840
+    },
+    {
+      "reason": "identical position already open",
+      "strategy": "S1_COHERENCE",
+      "marketKey": "1X2|FT|",
+      "ts": 1784359008840
+    },
+    {
+      "reason": "identical position already open",
+      "strategy": "S1_COHERENCE",
+      "marketKey": "Total Goals|FT|2.5",
+      "ts": 1784359008840
+    },
+    {
+      "reason": "identical position already open",
+      "strategy": "S1_COHERENCE",
+      "marketKey": "Total Goals|FT|3.5",
+      "ts": 1784359008840
+    },
+    {
+      "reason": "identical position already open",
+      "strategy": "S1_COHERENCE",
+      "marketKey": "Both Teams To Score|FT|",
+      "ts": 1784359008840
+    },
+    {
+      "reason": "identical position already open",
+      "strategy": "S3_CONVERGENCE",
+      "marketKey": "Total Goals|FT|2.5",
+      "ts": 1784359008840
+    },
+    {
+      "reason": "identical position already open",
+      "strategy": "S3_CONVERGENCE",
+      "marketKey": "Both Teams To Score|FT|",
+      "ts": 1784359008840
+    }
+  ],
+  "mm": {
+    "enabled": true,
+    "netUsdc": 16.13,
+    "spreadCapturedUsdc": 10.33,
+    "adverseUsdc": 0,
+    "fills": 59,
+    "liveQuotes": 9,
+    "informedDeflected": 25,
+    "openInventoryAbs": 0
+  },
+  "digestSummary": "30d: 6 decisions, 6 settled, 4W/2L, pnl +171.79 USDC | flags: S3_CONVERGENCE:stale"
+}

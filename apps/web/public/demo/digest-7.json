@@ -1,0 +1,67 @@
+{
+  "hash": "aff33520fab94428e9101219be4b8eed1945b78e2489d3583c7c7fe6228c26f9",
+  "generatedAtTs": 1784359925195,
+  "windowDays": 7,
+  "windowStartTs": 1783755125195,
+  "strategies": [
+    {
+      "strategy": "S1_COHERENCE",
+      "n": 2,
+      "wins": 1,
+      "hitRate": 0.5,
+      "stakedUsdc": 61.18,
+      "pnlUsdc": -19.5,
+      "roi": -0.3187,
+      "brier": 0.2064,
+      "meanEdge": 0.0721,
+      "lastDecisionTs": 1784356308840,
+      "lastSettlementTs": 1784359186840,
+      "activity": "active"
+    },
+    {
+      "strategy": "S2_REACTION",
+      "n": 4,
+      "wins": 3,
+      "hitRate": 0.75,
+      "stakedUsdc": 188.82,
+      "pnlUsdc": 191.29,
+      "roi": 1.0131,
+      "brier": 0.1365,
+      "meanEdge": 0.2201,
+      "lastDecisionTs": 1784354206840,
+      "lastSettlementTs": 1784359186840,
+      "activity": "active"
+    },
+    {
+      "strategy": "S3_CONVERGENCE",
+      "n": 0,
+      "wins": 0,
+      "hitRate": 0,
+      "stakedUsdc": 0,
+      "pnlUsdc": 0,
+      "roi": 0,
+      "brier": null,
+      "meanEdge": null,
+      "lastDecisionTs": null,
+      "lastSettlementTs": null,
+      "activity": "stale"
+    }
+  ],
+  "overall": {
+    "decisions": 6,
+    "settled": 6,
+    "wins": 4,
+    "stakedUsdc": 250,
+    "pnlUsdc": 171.79,
+    "roi": 0.6872,
+    "hitRate": 0.6667
+  },
+  "days": [
+    {
+      "day": "2026-07-18",
+      "decisions": 6,
+      "settled": 6,
+      "pnlUsdc": 171.79
+    }
+  ]
+}

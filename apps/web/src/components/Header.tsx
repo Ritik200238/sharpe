@@ -1,4 +1,5 @@
 import { store, useStore, type ConnectionState } from "../store/store";
+import { DEMO_MODE } from "../api/client";
 import type { Route } from "../lib/router";
 
 const NAV: Array<{ label: string; route: Route }> = [
@@ -58,8 +59,11 @@ export function Header() {
           <span className="badge">feed: {status?.feedMode ?? "—"}</span>
           <span className="badge">exec: {status?.execMode ?? "—"}</span>
           <span className="conn">
-            <span className="conn-dot" style={{ background: connColor(state.connection) }} />
-            {connLabel(state.connection)}
+            <span
+              className="conn-dot"
+              style={{ background: DEMO_MODE ? "var(--lime)" : connColor(state.connection) }}
+            />
+            {DEMO_MODE ? "DEMO" : connLabel(state.connection)}
           </span>
         </div>
       </div>

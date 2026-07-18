@@ -11,6 +11,7 @@
  */
 import { useSyncExternalStore } from "react";
 import {
+  DEMO_MODE,
   fetchDecisions,
   fetchDigest,
   fetchHealth,
@@ -377,6 +378,13 @@ class SharpeStore {
   // ---------- SSE ----------
 
   private openStream(): void {
+    // DEMO mode has no backend to stream from — the bundled fixtures are
+    // static, so we stay on the (harmless) poll loop and skip SSE entirely.
+    if (DEMO_MODE) {
+      this.state.connection = "polling";
+      this.notify();
+      return;
+    }
     if (this.es) {
       this.es.close();
       this.es = null;

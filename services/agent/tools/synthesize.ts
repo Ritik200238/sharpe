@@ -35,9 +35,15 @@ export interface SyntheticMatch {
   finalScore: { p1: number; p2: number };
 }
 
-export function synthesizeMatch(seed = 42, fixtureId = 90000001): SyntheticMatch {
+export function synthesizeMatch(
+  seed = 42,
+  fixtureId = 90000001,
+  // Fixed epoch base by default → byte-identical output for the determinism
+  // tests. The demo-capture tool passes a recent kickoff so the fixtures read
+  // as a just-finished match (relative times + digest windows stay sensible).
+  kickoff = 1_766_000_000_000,
+): SyntheticMatch {
   const rng = new Lcg(seed);
-  const kickoff = 1_766_000_000_000; // fixed epoch base — determinism
   const scores: JournalLine[] = [];
   const odds: JournalLine[] = [];
 

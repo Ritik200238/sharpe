@@ -1,0 +1,192 @@
+[
+  {
+    "hash": "ddd873dd0549e637223d89eddac4d646745c3d432fa820672c7a7a7005a88e02",
+    "decidedAtTs": 1784356308840,
+    "mode": "paper",
+    "strategy": "S1_COHERENCE",
+    "fixtureId": 90000001,
+    "marketKey": "Total Goals|FT|2.5",
+    "family": "TOTAL_GOALS",
+    "line": 2.5,
+    "outcomeIndex": 1,
+    "outcomeName": "under",
+    "modelProb": 0.6264,
+    "marketProb": 0.5501,
+    "edge": 0.0764,
+    "stakeUsdc": 28.29,
+    "priceDecimal": 1.8179,
+    "reason": "Cross-market fit (λh=1.62, λa=1.27) prices UNDER at 62.6%; this quote implies 55.0%. Incoherent leg, edge +7.6% ≥ 6.5%.",
+    "sizing": {
+      "kellyFraction": 0.0141,
+      "calibrationFactor": 1,
+      "allocationWeight": 0.3333,
+      "bankrollUsdc": 2000
+    },
+    "inputs": {
+      "scoreSeq": 3,
+      "scoreTs": 1784356306840,
+      "oddsMessageId": "m-1784356308840-Total Goals",
+      "oddsTs": 1784356308840,
+      "lambdaHome": 1.6244580923099723,
+      "lambdaAway": 1.2668370587969853
+    }
+  },
+  {
+    "hash": "5be451809a03a3e8a84c3c61f4c3383d6c6eaa6a22abd9b2dacf1eb56700d603",
+    "decidedAtTs": 1784356308840,
+    "mode": "paper",
+    "strategy": "S1_COHERENCE",
+    "fixtureId": 90000001,
+    "marketKey": "Total Goals|FT|3.5",
+    "family": "TOTAL_GOALS",
+    "line": 3.5,
+    "outcomeIndex": 1,
+    "outcomeName": "under",
+    "modelProb": 0.8569,
+    "marketProb": 0.7891,
+    "edge": 0.0677,
+    "stakeUsdc": 32.89,
+    "priceDecimal": 1.2672,
+    "reason": "Cross-market fit (λh=1.62, λa=1.27) prices UNDER at 85.7%; this quote implies 78.9%. Incoherent leg, edge +6.8% ≥ 6.5%.",
+    "sizing": {
+      "kellyFraction": 0.0268,
+      "calibrationFactor": 1,
+      "allocationWeight": 0.3333,
+      "bankrollUsdc": 2000
+    },
+    "inputs": {
+      "scoreSeq": 3,
+      "scoreTs": 1784356306840,
+      "oddsMessageId": "m-1784356308840-Total Goals",
+      "oddsTs": 1784356308840,
+      "lambdaHome": 1.6244580923099723,
+      "lambdaAway": 1.2668370587969853
+    }
+  },
+  {
+    "hash": "464f95fe6326b2cb27ed86569dde9094b11e10dd15deb75b638ab301b4a8c459",
+    "decidedAtTs": 1784354206840,
+    "mode": "paper",
+    "strategy": "S2_REACTION",
+    "fixtureId": 90000001,
+    "marketKey": "1X2|FT|",
+    "family": "WIN_DRAW_WIN",
+    "outcomeIndex": 2,
+    "outcomeName": "2",
+    "modelProb": 0.559,
+    "marketProb": 0.2634,
+    "edge": 0.2956,
+    "stakeUsdc": 50,
+    "priceDecimal": 3.7961,
+    "reason": "Goal at seq 2 repriced this match; quote is 298s older than the event. Model now 55.9% for 2, stale quote implies 26.3%, edge +29.6%.",
+    "sizing": {
+      "kellyFraction": 0.0334,
+      "calibrationFactor": 1,
+      "allocationWeight": 0.3333,
+      "bankrollUsdc": 2000
+    },
+    "inputs": {
+      "scoreSeq": 2,
+      "scoreTs": 1784354206840,
+      "oddsMessageId": "m-1784353908840-1X2",
+      "oddsTs": 1784353908840,
+      "lambdaHome": 1.6244580923099723,
+      "lambdaAway": 1.2668370587969853
+    }
+  },
+  {
+    "hash": "e11c7c9084699b5d876ea93782a56800408789d445a73a326d14792d12e43897",
+    "decidedAtTs": 1784354206840,
+    "mode": "paper",
+    "strategy": "S2_REACTION",
+    "fixtureId": 90000001,
+    "marketKey": "Total Goals|FT|2.5",
+    "family": "TOTAL_GOALS",
+    "line": 2.5,
+    "outcomeIndex": 0,
+    "outcomeName": "over",
+    "modelProb": 0.7153,
+    "marketProb": 0.533,
+    "edge": 0.1824,
+    "stakeUsdc": 50,
+    "priceDecimal": 1.8763,
+    "reason": "Goal at seq 2 repriced this match; quote is 298s older than the event. Model now 71.5% for OVER, stale quote implies 53.3%, edge +18.2%.",
+    "sizing": {
+      "kellyFraction": 0.0325,
+      "calibrationFactor": 1,
+      "allocationWeight": 0.3333,
+      "bankrollUsdc": 2000
+    },
+    "inputs": {
+      "scoreSeq": 2,
+      "scoreTs": 1784354206840,
+      "oddsMessageId": "m-1784353908840-Total Goals",
+      "oddsTs": 1784353908840,
+      "lambdaHome": 1.6244580923099723,
+      "lambdaAway": 1.2668370587969853
+    }
+  },
+  {
+    "hash": "cd30b46500161c8b1e2b9dc02bb5fa7816fb1443ec23b9aad201d1d7839cbbd8",
+    "decidedAtTs": 1784354206840,
+    "mode": "paper",
+    "strategy": "S2_REACTION",
+    "fixtureId": 90000001,
+    "marketKey": "Total Goals|FT|3.5",
+    "family": "TOTAL_GOALS",
+    "line": 3.5,
+    "outcomeIndex": 0,
+    "outcomeName": "over",
+    "modelProb": 0.4595,
+    "marketProb": 0.2954,
+    "edge": 0.1641,
+    "stakeUsdc": 38.82,
+    "priceDecimal": 3.3855,
+    "reason": "Goal at seq 2 repriced this match; quote is 298s older than the event. Model now 45.9% for OVER, stale quote implies 29.5%, edge +16.4%.",
+    "sizing": {
+      "kellyFraction": 0.0194,
+      "calibrationFactor": 1,
+      "allocationWeight": 0.3333,
+      "bankrollUsdc": 2000
+    },
+    "inputs": {
+      "scoreSeq": 2,
+      "scoreTs": 1784354206840,
+      "oddsMessageId": "m-1784353908840-Total Goals",
+      "oddsTs": 1784353908840,
+      "lambdaHome": 1.6244580923099723,
+      "lambdaAway": 1.2668370587969853
+    }
+  },
+  {
+    "hash": "716dddc7f80fc712468da4d656f0692c9866e58e10a9904d79978118801448c4",
+    "decidedAtTs": 1784354206840,
+    "mode": "paper",
+    "strategy": "S2_REACTION",
+    "fixtureId": 90000001,
+    "marketKey": "Both Teams To Score|FT|",
+    "family": "BOTH_TEAMS_SCORE",
+    "outcomeIndex": 0,
+    "outcomeName": "yes",
+    "modelProb": 0.7563,
+    "marketProb": 0.5182,
+    "edge": 0.2381,
+    "stakeUsdc": 50,
+    "priceDecimal": 1.9296,
+    "reason": "Goal at seq 2 repriced this match; quote is 298s older than the event. Model now 75.6% for YES, stale quote implies 51.8%, edge +23.8%.",
+    "sizing": {
+      "kellyFraction": 0.0412,
+      "calibrationFactor": 1,
+      "allocationWeight": 0.3333,
+      "bankrollUsdc": 2000
+    },
+    "inputs": {
+      "scoreSeq": 2,
+      "scoreTs": 1784354206840,
+      "oddsMessageId": "m-1784353908840-Both Teams To Score",
+      "oddsTs": 1784353908840,
+      "lambdaHome": 1.6244580923099723,
+      "lambdaAway": 1.2668370587969853
+    }
+  }
+]

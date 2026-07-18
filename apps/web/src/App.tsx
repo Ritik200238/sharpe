@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import { useStore } from "./store/store";
+import { DEMO_MODE } from "./api/client";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import { Command } from "./views/Command";
@@ -48,7 +49,15 @@ export function App() {
       </div>
       <Header />
       <main className="main">
-        {state.connection === "dead" ? (
+        {DEMO_MODE ? (
+          <div className="demo-banner" role="status">
+            <strong>Live demo</strong> — a demonstration match played through the real agent
+            pipeline (the exact code that runs on live TxLINE data). The on-chain proofs linked
+            on the About page are real devnet transactions. Point this at a live agent any time
+            with <code>?api=&lt;url&gt;</code>.
+          </div>
+        ) : null}
+        {state.connection === "dead" && !DEMO_MODE ? (
           <div className="dead-banner" role="status">
             agent API unreachable — the process may be restarting · retrying automatically
           </div>
