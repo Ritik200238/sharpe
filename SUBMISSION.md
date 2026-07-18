@@ -50,6 +50,11 @@ signs and lands a Solana transaction for every commitment it makes — decisions
 and the **market maker's quote-book snapshots** — before the outcome exists. Live examples you
 can open right now:
 
+- **Our own on-chain program** — the `registry`, a custom Solana program we wrote, compiled
+  (on CI), and **deployed to devnet**: program
+  [`6T8ec9WXJ9LL…mm9sT`](https://explorer.solana.com/address/6T8ec9WXJ9LLX7XRwrF1Q1u3tQxfXxX7X3zaLd3mm9sT?cluster=devnet)
+  (executable). It records commitment hashes in immutable PDAs; a live commit:
+  [`2Z9tA6yXvXP3…`](https://explorer.solana.com/tx/2Z9tA6yXvXP3FDJyEozacc7qHnTKSK1ccaD4oFBkk1XN4vAFREETULESdrtMWFVaE5jFJRPoWnWnjCxyPRAg3qNg?cluster=devnet) → PDA `5onq6WQq…`. Source: `programs/registry/`.
 - **Quote-book snapshot** (the maker's on-chain book — the "proof of quotes"): memo
   `sharpe:v1:quote_book:85535b3d…` →
   [`5ba75L2uqVcv…Cs95f`](https://explorer.solana.com/tx/5ba75L2uqVcvSwxomL8BfLFK46xLXXn5zY4wbNJUAwPYuf4E9qppHWK8hn7mzzfBRdCk1WcDwFpmQa25yNNCs95f?cluster=devnet)
@@ -102,10 +107,12 @@ and produces the one thing money can't currently buy: a track record that can't 
 | **Judges can test it** (deployed / live endpoint) | ✅ self-contained demo live on Pages + verifiable devnet txs |
 | **Public repo + clean docs + endpoints list** | ✅ |
 
-**CLAUDE.md Solana ladder:** at the **Competitive→Winning** line — the agent autonomously
-signs Solana transactions to record decisions **and its market-maker quote book** (verified
-landing on devnet, links above) AND self-verifies outcomes trustlessly via `validateStatV2`.
-The full escrow/vault execution loop is scoped roadmap (`programs/README.md`), honestly deferred
+**CLAUDE.md Solana ladder:** solidly at **Winning** on the commitment side and Competitive→Winning
+on execution. The agent autonomously signs Solana transactions to record decisions **and its
+market-maker quote book**, self-verifies outcomes trustlessly via `validateStatV2`, **and we
+wrote + deployed our own on-chain program** — the `registry` (program `6T8ec9WX…`, deployed +
+runtime-verified on devnet, links above). The remaining escrow/vault execution programs are
+scoped roadmap (`programs/README.md`) and now build the same proven CI path — honestly deferred
 rather than shipped half-baked (per the "nothing half-baked" law).
 
 **CLAUDE.md don'ts — none committed:** not a GPT-wrapper narrator; not manual; not a static

@@ -1,6 +1,27 @@
-# programs/ — On-chain settlement (P3, roadmap)
+# programs/ — On-chain programs
 
-## What already works on-chain (this is the important part)
+## ✅ LIVE on devnet: the commitment `registry` (built, deployed, working)
+
+The `registry/` program is a **real, custom Solana program — compiled, deployed to devnet,
+and runtime-verified.** It is the typed, on-chain successor to the Memo commitment path:
+it records a commitment `(kind, 32-byte hash)` in a PDA seeded by the hash and **refuses to
+overwrite an existing one**, so a commitment can never be rewritten or backdated.
+
+| | |
+|---|---|
+| **Program ID** | [`6T8ec9WXJ9LLX7XRwrF1Q1u3tQxfXxX7X3zaLd3mm9sT`](https://explorer.solana.com/address/6T8ec9WXJ9LLX7XRwrF1Q1u3tQxfXxX7X3zaLd3mm9sT?cluster=devnet) (executable, upgradeable BPF loader) |
+| **Deploy tx** | [`4xK5du3VtTsa…`](https://explorer.solana.com/tx/4xK5du3VtTsa9MdwCih8w9DGALCEsjz9sznmxXgGzancyqGyUc2Jd4beEGiyWCmywXeuc5Yfz64etuTQR4oJjbKG?cluster=devnet) |
+| **A recorded commitment** | tx [`2Z9tA6yXvXP3…`](https://explorer.solana.com/tx/2Z9tA6yXvXP3FDJyEozacc7qHnTKSK1ccaD4oFBkk1XN4vAFREETULESdrtMWFVaE5jFJRPoWnWnjCxyPRAg3qNg?cluster=devnet) → PDA `5onq6WQqApSendrtvktfpX6hFQyqU5feqSwnGyRD76mb` (81 bytes: kind, hash, slot, unix_ts, authority) |
+| **Source** | [`registry/src/lib.rs`](registry/src/lib.rs) (~90 lines, native Solana) |
+| **Build** | [`.github/workflows/programs.yml`](../.github/workflows/programs.yml) — `cargo build-sbf`, green |
+
+**How it was built despite a Windows toolchain wall:** the maintainer's Windows box can't
+compile SBF locally (no native MSVC toolchain — four documented attempts below). So the
+program is compiled on **Linux CI** (where the Agave/SBF toolchain works cleanly), and the
+resulting `.so` is deployed to devnet from the local `solana` CLI. A green CI run *is* the
+proof it compiles; the tx links above are the proof it runs.
+
+## What already works on-chain (the settlement side)
 
 SHARPE's trustless settlement is **already proven end-to-end on Solana devnet** — it does
 not depend on anything in this directory:
@@ -20,31 +41,31 @@ self-verifies outcomes trustlessly via `validate_stat`. The pieces below complet
 not the headline. Per our framing law, the *agent* is the product; escrow/vault is
 Track-3-flavored infrastructure that rides underneath it.
 
-## The design (three Anchor programs)
+## The three programs
 
-1. **`market`** — binary-outcome escrow. USDC held in per-market PDAs; a settlement
-   instruction CPIs into TxLINE `validateStatV2` with the Merkle proof + strategy
+1. **`registry`** — ✅ **DONE (deployed, above).** Agent decision- and quote-book-hash
+   commitments as typed, immutable PDA accounts — the on-chain successor to the Memo path.
+2. **`market`** — *roadmap.* Binary-outcome escrow. USDC held in per-market PDAs; a
+   settlement instruction CPIs into TxLINE `validateStatV2` with the Merkle proof + strategy
    predicate; on `verified == true`, funds route to the winning side. No admin key, no
    oracle, no dispute window — the same primitive the agent already exercises off-chain,
    moved into custody.
-2. **`vault`** — "the agent's bankroll." Non-custodial USDC deposits by epoch; share
-   accounting with a high-water-mark performance fee; the agent trades vault capital via a
-   PDA-delegated authority; program-enforced position caps (even a compromised agent key
-   can't exceed them).
-3. **`registry`** — agent identity + decision-hash commitments as typed accounts
-   (superseding the Memo path once live; batched Merkle roots per minute for mainnet cost).
+3. **`vault`** — *roadmap.* "The agent's bankroll." Non-custodial USDC deposits by epoch;
+   share accounting with a high-water-mark performance fee; the agent trades vault capital
+   via a PDA-delegated authority; program-enforced position caps (even a compromised agent
+   key can't exceed them).
 
 The settlement predicate mapping is already built and tested off-chain
 (`services/agent/src/settle/proofs.ts` — `planActualOutcome` for WIN_DRAW_WIN /
-TOTAL_GOALS / BTTS), so porting it into a `market` CPI is a well-scoped, low-unknown task
-once the toolchain is available.
+TOTAL_GOALS / BTTS), so porting it into a `market` CPI is a well-scoped, low-unknown task —
+and now that the CI build path is proven, `market`/`vault` build the same way.
 
-## Why this directory ships as design, not code — honest status (we tried, empirically)
+## Why we build on CI, not the local box (the Windows toolchain wall)
 
-Building on the principle *"nothing half-baked — no stubs pretending to be features"*
-(`CLAUDE.md`), we do **not** commit uncompiled, untested Anchor programs and call them
-done. The blocker is environmental, not conceptual — and we confirmed it by actually
-attempting the build four different ways, not by theorizing:
+The `registry` above is built + deployed, so this is no longer "design, not code." But it
+is built on **Linux CI**, not the maintainer's Windows machine — because that box genuinely
+can't compile SBF locally. We confirmed the blocker by attempting the local build four
+different ways, not by theorizing:
 
 1. **`cargo-build-sbf` directly** (Agave 4.1.2 / platform-tools v1.54, both installed and
    working). The SBF program object links fine with `rust-lld`, but the host-side
